@@ -1,0 +1,161 @@
+{
+    "produccion": {
+        "visionEstrategica": {
+            "publicoObjetivo": "huevo",
+            "posicionamiento": "",
+            "escala_produccion": ""
+        },
+        "identidad_del_proyecto": {
+            "definicion_conceptual": "",
+            "propuesta_valor_diferencial": "",
+            "expectativa_mercado": ""
+        },
+        "configuracion_del_equipo": {
+            "perfil_director": "",
+            "perfil_compositor": "",
+            "colaboradores_clave": ""
+        }
+    },
+    "direccion": {
+        "nota_de_direccion": {
+            "vision_autoral": "",
+            "referencias": "",
+            "tono_general": ""
+        },
+        "ritmo_y_narrativa": {
+            "velocidad_narrativa": "",
+            "uso_planos": "",
+            "estructura": ""
+        },
+        "universo_visual": {
+            "referencias_esteticas": "",
+            "mood": "",
+            "color": ""
+        }
+    },
+    "diseno_de_produccion": {
+        "estilo_global": {
+            "sistema_formal": "",
+            "traduccion_vision_director": ""
+        },
+        "reglas_del_universo": {
+            "normas_visuales": "",
+            "nivel_estilizacion": ""
+        },
+        "acting": {
+            "tipo": "",
+            "nivel_exageracion": ""
+        }
+    },
+    "direccion_de_arte": {
+        "escenarios": {
+            "diseno_espacios": ""
+        },
+        "objetos_y_atrezzo": {
+            "elementos_identitarios": ""
+        },
+        "vestuario": {
+            "linea_estetica": ""
+        }
+    },
+    "direccion_de_fotografia": {
+        "camara_y_optica": {
+            "lentes": "",
+            "movimiento_camara": "",
+            "distorsiones_opticas": ""
+        },
+        "encuadre_y_composicion": {
+            "predominio_planos": "",
+            "geometria_visual": ""
+        },
+        "luz_y_color": {
+            "temperatura_color": "",
+            "realismo_vs_estilizacion": "",
+            "referencias_luminicas": ""
+        },
+        "textura_de_imagen": {
+            "grano": "",
+            "acabado": ""
+        }
+    },
+    "direccion_de_animacion": {
+        "aplica": "",
+        "estilo_de_movimiento": {
+            "tipo": "",
+            "referencias": ""
+        },
+        "fisica_y_elasticidad": {
+            "leyes_fisicas": ""
+        },
+        "acting_animado": {
+            "expresividad": ""
+        }
+    },
+    "direccion_de_iluminacion": {
+        "diseno_luminico": {
+            "tipo_luz": "",
+            "saturacion_contraste": ""
+        },
+        "ambientacion": {
+            "construccion_atmosferica": "",
+            "uso_sombras": ""
+        }
+    },
+    "montaje": {
+        "ritmo": {
+            "duracion_media_plano": "",
+            "intensidad_corte": ""
+        },
+        "estilo_de_edicion": {
+            "tipo": "",
+            "relacion_redes": ""
+        },
+        "relectura_del_guion": {
+            "grado_intervencion": ""
+        }
+    },
+    "musica_composicion": {
+        "enfoque_musical": {
+            "estilo": "",
+            "instrumentacion": ""
+        },
+        "funcion_dramatica": {
+            "leitmotivs": "",
+            "rol_musica": ""
+        }
+    },
+    "diseno_de_sonido": {
+        "enfoque_sonoro": {
+            "realismo_vs_estilizacion": "",
+            "tipo_efectos": ""
+        },
+        "espacialidad": {
+            "diseno_inmersivo": "",
+            "tratamiento_silencio": ""
+        }
+    },
+    "casting_diseno_personajes": {
+        "enfoque_personajes": {
+            "estilo": "",
+            "estetica": ""
+        },
+        "morfologia_animacion": {
+            "proporciones": "",
+            "nivel_caricaturizacion": ""
+        },
+        "criterios_casting": {
+            "tipo_actores": "",
+            "criterios_eleccion": ""
+        }
+    },
+    "coordinacion_general": {
+        "coherencia_global": {
+            "elementos_transversales": "",
+            "lineas_rojas": ""
+        },
+        "riesgos_asumidos": {
+            "decisiones_no_convencionales": "",
+            "apuesta_diferencial": ""
+        }
+    }
+}
