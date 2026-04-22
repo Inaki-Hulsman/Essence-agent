@@ -1,6 +1,6 @@
 from langfuse import Langfuse
 from langfuse.openai import openai as langfuse_openai # type: ignore
-from app.config import OPENAI_API_KEY, GEMMA_BASE_URL, GEMMA_API_KEY
+from app.config import OPENAI_API_KEY, VLLM_BASE_URL
 import os
 
 from openai import OpenAI

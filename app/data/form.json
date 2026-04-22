@@ -44,7 +44,7 @@
     "configuracion_del_equipo": {
       "perfil_director": {
         "value": "Director con experiencia en terror psicológico y habilidad para construir tensión.",
-        "status": "agent",
+        "status": "image_ref",
         "description": "Define el tipo de director/a ideal para el proyecto."
       },
       "perfil_compositor": {
@@ -171,8 +171,8 @@
     ],
     "escenarios": {
       "diseno_espacios": {
-        "value": "",
-        "status": "empty",
+        "value": "Espacios estelares con planetas de fondo y detalles visuales impresionantes.",
+        "status": "agent",
         "description": "Diseño visual de los espacios donde ocurre la acción."
       }
     },
@@ -203,8 +203,8 @@
     ],
     "camara_y_optica": {
       "lentes": {
-        "value": "",
-        "status": "empty",
+        "value": "40 milímetros",
+        "status": "agent",
         "description": "Tipo de lentes y su efecto visual en la imagen."
       },
       "movimiento_camara": {
