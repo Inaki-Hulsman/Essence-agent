@@ -1,17 +1,27 @@
 import json
 import os
-from typing import BinaryIO, Any, Dict, List
+from typing import Literal, Optional, List, Dict, Any
 
-from fastapi import UploadFile
 from app.config import IMAGES_FOLDER
-from app.services.schemas import Field_Text, dict_to_custom_class
 from app.services.logger import logger
+
+from pydantic import BaseModel, create_model
+
+
+
+class Field_Text(BaseModel):
+    value: str = ""
+    status: Literal["empty", "agent", "user", "default", "image_ref"] = "empty"
+    description: Optional[str] = None
 
 
 FIELD_KEYS = set(Field_Text.model_fields.keys())
 
 form_path = "app/data/form.json"
 empty_form_path = "app/data/empty_form.json"
+
+
+
 
 
 class FormManager:
@@ -222,3 +232,37 @@ class FormManager:
         self.current_image_name = ""
         self.current_image_type = ""
 
+
+
+
+
+
+
+def dict_to_custom_class(name: str, d: Dict[str, Any]) -> BaseModel:
+    """
+    Convierte un diccionario en un modelo Pydantic dinámico.
+    """
+    fields = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            # Si parece un Field
+            if set(v.keys()) >= Field_Text.model_fields.keys():
+                fields[k] = (Field_Text, Field_Text(**v))
+            else:
+                # Crear modelo anidado recursivamente
+                nested_model = dict_to_custom_class(k.capitalize(), v)
+                fields[k] = (nested_model, nested_model(**v)) # type: ignore
+        elif isinstance(v, list):
+            # Convertir listas a esquemas tipados, especialmente list[str]
+            if len(v) > 0:
+                item_type = type(v[0])
+                fields[k] = (List[item_type], v)
+            else:
+                fields[k] = (List[str], v)
+        else:
+            # Para valores simples
+            fields[k] = (type(v), v)
+    
+    # Crear modelo dinámico
+    model = create_model(name, **fields)
+    return model # type: ignore

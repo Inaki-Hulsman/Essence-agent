@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import IMAGES_FOLDER
 from app.services.form_manager import FormManager
-from app.services.llm import extract_section_info
+from app.realtime.llm import extract_section_info
 from app.services.logger import logger
 from app.services.utils import encode_file, load_image
 
@@ -18,9 +18,15 @@ from app.realtime.llm import stream_llm_response
 
 app = FastAPI()
 
+origins = [
+    "http://localhost:3000",  # tu frontend
+    "http://127.0.0.1:3000",
+    "http://192.168.1.13:3000"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,   # o ["*"] para permitir todo (solo dev)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -152,7 +158,7 @@ async def startup():
     _tts = TTSService()
 
 
-@app.websocket("/ws")
+@app.websocket("/ws-local")
 async def websocket_agent(client_ws: WebSocket):
     await client_ws.accept()
 
@@ -261,18 +267,6 @@ async def websocket_agent(client_ws: WebSocket):
 
         except Exception as e:
             print(f"❌ llm_tts_pipeline: {e}")
-
-    try:
-        await asyncio.gather(
-            receive_audio(),
-            process_stt_events(),
-            llm_tts_pipeline(),
-        )
-    except Exception as e:
-        print(f"🔥 WS error: {e}")
-    finally:
-        stt.stop()
-        await client_ws.close()
 
     # -------------------------------------------------------------------------
     # 🚀  Lanzar las tres tareas en paralelo

@@ -12,16 +12,10 @@ def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
     prompt = langfuse.get_prompt("Essence-main-chat")
 
     compiled_prompt = prompt.compile(
-        #language=language,
         form=state,
         changes=changes,
         chat=recent_messages
     )
-
-    # content ="Hola!"
-    # compiled_prompt = [{"role": "user", "content": content}]
-
-    # print("Compiled prompt for LLM call:", compiled_prompt)
    
     response = client.chat.completions.create(
         model=CHAT_MODEL,
@@ -82,29 +76,3 @@ def extract_section_info(user_message: list, new_form : dict, form_class: type, 
         return form_class()
 
     return parsed
-
-
-# def analyze_image(content_path : str = "C:\\Users\\inaki.hulsman\\Downloads\\scroll.jpg"):
-
-
-#     content_type = "image/jpeg"
-#     base64_image = encode_file(content_path)
-#     response = client.chat.completions.create(
-#         model=VISION_MODEL,
-#         messages=[
-#             {
-#                 "role": "user",
-#                 "content": [
-#                     {"type": "text", "text": "What’s in this image?"},
-#                     {
-#                         "type": "image_url",
-#                         "image_url": {
-#                             "url": f"data:{content_type};base64,{base64_image}"
-#                         },
-#                     },
-#                 ],
-#             }
-#         ],
-#         max_tokens=300,
-#     )
-#     return response.choices[0].message.content

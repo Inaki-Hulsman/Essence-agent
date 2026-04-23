@@ -1,8 +1,14 @@
 import json
 from typing import List, Dict, Any, AsyncGenerator
-from app.config import VLLM_BASE_URL, GEMMA_CHAT_MODEL
-
+from app.config import GEMMA_CHAT_MODEL
 from openai import AsyncOpenAI
+from app.services.schemas import EXECUTOR_PROMPT, ROUTER_PROMPT, SYSTEM_PROMPT, TOOL_SCHEMAS, build_router_schema, build_tool_schema
+
+from langfuse import observe
+from pydantic import BaseModel
+from app.config import CHAT_MODEL
+from app.services.observability import openai_client, async_client, langfuse
+from app.services.utils import encode_file
 
 # ⚠️ vLLM debe estar levantado en modo OpenAI-compatible con:
 # python -m vllm.entrypoints.openai.api_server \
@@ -13,163 +19,81 @@ from openai import AsyncOpenAI
 MODEL_NAME = GEMMA_CHAT_MODEL
 MAX_TOOL_ITERATIONS = 5  # Evita loops infinitos
 
-client = AsyncOpenAI(
-    base_url=VLLM_BASE_URL,
-    api_key="not-needed"
-)
-
 
 # -----------------------
-# 🧰 TOOL SCHEMA BUILDER
+# 🧠 LLAMDAS BÁSICAS
 # -----------------------
+@observe(name="llm-call", as_type="span")
+def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
 
-def build_router_schema(tool_names: list[str]) -> Dict[str, Any]:
-    """
-    Schema mínimo para la decisión binaria: ¿necesito tool o no?
-    Separar el router del executor reduce alucinaciones en Gemma.
-    """
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": "routing_decision",
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "needs_tool": {"type": "boolean"},
-                    "tool_name": {
-                        "type": "string",
-                        "enum": tool_names + ["none"]
+    prompt = langfuse.get_prompt("Essence-main-chat")
+
+    compiled_prompt = prompt.compile(
+        form=state,
+        changes=changes,
+        chat=recent_messages
+    )
+   
+    response = openai_client.chat.completions.create(
+        model=CHAT_MODEL,
+        messages= compiled_prompt ,# type: ignore
+    )
+
+    content = response.choices[0].message.content # type: ignore
+
+    if content is None: return "I couldn't generate a response based on your query."
+    return content
+
+
+@observe(name="extract-section-info", as_type="span")
+def extract_section_info(user_message: list, new_form : dict, form_class: type, image = None, image_type = None) -> BaseModel:
+
+    print(f"Extracting info for section with message: {user_message} and form: {new_form}")
+    # Build prompt
+    prompt = langfuse.get_prompt("Extract_section_info")
+
+    compiled_prompt : list= prompt.compile(
+        form=new_form,
+        chat=user_message
+    ) # type: ignore
+
+    print("Compiled prompt for extraction:", compiled_prompt)
+
+    print(f"Image provided: {image is not None}, image type: {image_type}")
+
+    if image and image_type:
+        content_type = image_type
+        base64_image = encode_file(image)
+
+        compiled_prompt = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": compiled_prompt[0]["content"]},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{content_type};base64,{base64_image}"
+                        },
                     },
-                    "reason": {"type": "string"}
-                },
-                "required": ["needs_tool", "tool_name"],
-                "additionalProperties": False
+                ],
             }
-        }
-    }
+        ] + compiled_prompt
+       
+    response = openai_client.chat.completions.parse(
+        model=CHAT_MODEL,
+        messages=compiled_prompt, # type: ignore
+        response_format=form_class
+    )
 
+    parsed = response.choices[0].message.parsed # type: ignore
 
-def build_tool_schema(tool_name: str, tools: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Schema específico por tool — mucho más preciso que un schema genérico.
-    Gemma sigue mejor instrucciones cuando el schema es concreto.
-    """
-    # Buscar el schema de parámetros en TOOL_SCHEMAS
-    tool_def = next((t for t in TOOL_SCHEMAS if t["name"] == tool_name), None)
-    if not tool_def:
-        # Fallback genérico
-        return {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "tool_call",
-                "schema": {
-                    "type": "object",
-                    "properties": {
-                        "arguments": {"type": "object", "additionalProperties": True}
-                    },
-                    "required": ["arguments"],
-                    "additionalProperties": False
-                }
-            }
-        }
+    if parsed is None:
+        # fallback defensivo
+        return form_class()
 
-    params_schema = tool_def.get("parameters", {"type": "object", "properties": {}})
+    return parsed
 
-    return {
-        "type": "json_schema",
-        "json_schema": {
-            "name": f"{tool_name}_call",
-            "schema": params_schema
-        }
-    }
-
-
-# -----------------------
-# 📋 SYSTEM PROMPTS
-# -----------------------
-
-SYSTEM_PROMPT = """Eres un asistente DE VOZ que ayuda a rellenar formularios.
-
-Tienes acceso a las siguientes herramientas:
-- get_form: Obtiene el formulario actual o uno nuevo vacío
-- extract_and_update: Extrae información del usuario y actualiza secciones del formulario
-- is_uploaded_image: Verifica si hay una imagen subida
-
-Cuando el usuario proporcione información o pida algo relacionado con el formulario, usa las herramientas apropiadas.
-Cuando solo sea una conversación general o pregunta, responde directamente sin herramientas. En este caso, responde de forma clara y concisa, y no uses el caracter *.
-Manten la conversación centrada en ayudar al usuario a completar el formulario, preguntándole por secciones aún sin completar"""
-
-
-ROUTER_PROMPT = """Analiza el mensaje y el contexto. Decide si necesitas una herramienta.
-
-Herramientas disponibles: {tool_names}
-
-Responde con JSON indicando si necesitas tool y cuál. Si no necesitas ninguna, tool_name = "none"."""
-
-EXECUTOR_PROMPT = """Basándote en el mensaje del usuario y el historial, genera los argumentos exactos para llamar a: {tool_name}
-
-Descripción: {tool_description}
-Parámetros requeridos: {required_params}
-
-Genera SOLO los argumentos en JSON, sin texto adicional."""
-
-
-# -----------------------
-# 📚 TOOL DEFINITIONS
-# -----------------------
-
-TOOL_SCHEMAS = [
-    {
-        "type": "function",
-        "name": "get_form",
-        "description": "Obtiene el formulario actual o uno nuevo vacío",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "new": {
-                    "type": "boolean",
-                    "description": "Si es True, devuelve un formulario vacío"
-                }
-            },
-            "additionalProperties": False
-        }
-    },
-    {
-        "type": "function",
-        "name": "extract_and_update",
-        "description": "Extrae información del mensaje del usuario para secciones seleccionadas y actualiza el formulario",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "description": "Mensaje del usuario con la información a extraer"
-                },
-                "selected_sections": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                    "description": "Rutas completas de secciones del formulario, ej: ['produccion.vision_estrategica.posicionamiento']"
-                },
-                "use_loaded_image": {
-                    "type": "boolean",
-                    "description": "True si hay imagen del usuario relevante para estos campos"
-                }
-            },
-            "required": ["message", "selected_sections"],
-            "additionalProperties": False
-        }
-    },
-    {
-        "type": "function",
-        "name": "is_uploaded_image",
-        "description": "Verifica si hay una imagen subida por el usuario",
-        "parameters": {
-            "type": "object",
-            "properties": {},
-            "additionalProperties": False
-        }
-    }
-]
 
 
 # -----------------------
@@ -178,7 +102,7 @@ TOOL_SCHEMAS = [
 
 async def generate_text_stream(messages: list) -> AsyncGenerator[str, None]:
     """Streaming normal de texto."""
-    stream = await client.chat.completions.create(
+    stream = await async_client.chat.completions.create(
         model=MODEL_NAME,
         messages=messages,
         stream=True,
@@ -201,7 +125,7 @@ async def route_decision(messages: list, tool_names: list[str]) -> Dict[str, Any
         "content": ROUTER_PROMPT.format(tool_names=", ".join(tool_names))
     }]
 
-    response = await client.chat.completions.create(
+    response = await async_client.chat.completions.create(
         model=MODEL_NAME,
         messages=router_messages,
         temperature=0,
@@ -244,7 +168,7 @@ async def execute_tool_call(
         )
     }]
 
-    response = await client.chat.completions.create(
+    response = await async_client.chat.completions.create(
         model=MODEL_NAME,
         messages=executor_messages,
         temperature=0,

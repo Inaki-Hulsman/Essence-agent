@@ -3,7 +3,7 @@ from app.services.form_manager import FormManager
 from app.services.logger import logger
 from typing import List, Dict, Any
 from fastapi import FastAPI, UploadFile, Form
-from app.services.llm import call_llm, extract_section_info
+from app.realtime.llm import call_llm, extract_section_info
 from app.config import IMAGES_FOLDER
 from app.services.utils import encode_file
 import os

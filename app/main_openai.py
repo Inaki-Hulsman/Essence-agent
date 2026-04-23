@@ -2,11 +2,10 @@ import asyncio
 import websockets
 import json
 import os
-import io
 from fastapi import FastAPI, WebSocket, UploadFile, File
 from app.config import IMAGES_FOLDER, OPENAI_API_KEY, OPENAI_WS_URL
 from app.services.form_manager import FormManager
-from app.services.llm import extract_section_info
+from app.realtime.llm import extract_section_info
 from app.services.logger import logger
 from typing import List 
 
@@ -25,7 +24,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # o ["*"] para permitir todo (solo dev)
+    allow_origins=origins,   # o ["*"] para permitir todo (solo dev)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -170,7 +169,10 @@ TOOL_SCHEMAS = [
         "parameters": {
             "type": "object",
             "properties": {
-                "new": {"type": "boolean", "description": "Si es True, devuelve un formulario vacío"}
+                "new": {
+                    "type": "boolean",
+                    "description": "Si es True, devuelve un formulario vacío"
+                }
             },
         }
     },
@@ -197,7 +199,6 @@ TOOL_SCHEMAS = [
             "required": []
         }
     }
-
 ]
 
 # -----------------------
@@ -293,7 +294,7 @@ class AgentRuntime:
 # 🌐 WEBSOCKET ENDPOINT
 # -----------------------
 
-@app.websocket("/ws")
+@app.websocket("/ws-openai")
 async def websocket_agent(client_ws: WebSocket):
     await client_ws.accept()
     print("🟢 Client connected")
