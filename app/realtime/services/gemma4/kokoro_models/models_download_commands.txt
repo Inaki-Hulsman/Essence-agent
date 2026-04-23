@@ -1,0 +1,5 @@
+wget -P kokoro_models https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx
+wget -P kokoro_models https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin
+
+# En kokoro_service, environment:
+KOKORO_MODEL_PATH: /models/kokoro-v1.0.fp16.onnx   # opción ligera

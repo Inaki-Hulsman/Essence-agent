@@ -1,0 +1,21 @@
+sudo docker run -d   --name gemma-26-half   --gpus all   -v /mnt/nas/ImasD/LLM_local_models:/root/.cache/huggingface   -p 8000:8000   --ipc=host  vllm/vllm-openai:gemma4-cu130   --model google/gemma-4-26B-A4B-it   --dtype auto   --max-model-len 70000   --gpu-memory-utilization 0.60
+
+
+sudo docker run -d   --name gemma   --gpus all   -v /mnt/nas/ImasD/LLM_local_models:/root/.cache/huggingface   -p 8000:8000   --ipc=host  vllm/vllm-openai:gemma4-cu130   --model google/gemma-4-E4B-it   --dtype auto   --max-model-len 4096   --gpu-memory-utilization 0.5
+
+sudo curl http://localhost:8000/v1/chat/completions   -H "Authorization: Bearer EMPTY"   -H "Content-Type: application/json"   -d '{
+    "model": "google/gemma-4-31B-it",
+    "messages": [
+      {"role": "user", "content": "Hola"}
+    ]
+  }'
+
+sudo docker rm gemma
+sudo docker logs -f gemma
+
+sudo docker compose up --build -d
+
+google/gemma4-26B-A4B-it
+google/gemma-4-31B-it
+google/gemma-4-E4B-it
+
