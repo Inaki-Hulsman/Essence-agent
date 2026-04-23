@@ -10,7 +10,7 @@ from app.config import KOKORO_HTTP_URL, DEFAULT_VOICE, DEFAULT_SPEED
 import httpx
 
 # Tamaño mínimo de chunk PCM16 para reenviar al cliente (~50ms a 24kHz)
-MIN_CHUNK_BYTES = 24000 * 2 * 50 // 1000   # 2400 bytes
+MIN_CHUNK_BYTES = 24000 * 2 * 250 // 1000   # 2400 bytes
 
 
 # -----------------------

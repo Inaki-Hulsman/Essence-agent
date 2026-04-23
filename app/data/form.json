@@ -44,8 +44,11 @@
     "configuracion_del_equipo": {
       "perfil_director": {
         "value": "Director con experiencia en terror psicológico y habilidad para construir tensión.",
-        "status": "image_ref",
-        "description": "Define el tipo de director/a ideal para el proyecto."
+        "status": "agent",
+        "description": "Define el tipo de director/a ideal para el proyecto.",
+        "references": [
+          "descarga (1).png"
+        ]
       },
       "perfil_compositor": {
         "value": "Compositor para crear una partitura minimalista y perturbadora, con sonidos experimentales.",
@@ -438,32 +441,32 @@
     ],
     "enfoque_personajes": {
       "estilo": {
-        "value": "",
-        "status": "empty",
+        "value": "estilizado",
+        "status": "agent",
         "description": "Grado de naturalismo o estilización de los personajes."
       },
       "estetica": {
-        "value": "",
-        "status": "empty",
+        "value": "miedo",
+        "status": "agent",
         "description": "Tipo de estética (normativa, estilizada, feísta, etc.)."
       }
     },
     "morfologia_animacion": {
       "proporciones": {
-        "value": "",
-        "status": "empty",
+        "value": "bolas peludas flotantes",
+        "status": "agent",
         "description": "Proporciones corporales de los personajes."
       },
       "nivel_caricaturizacion": {
-        "value": "",
-        "status": "empty",
+        "value": "muy caricaturesco",
+        "status": "agent",
         "description": "Nivel de exageración visual."
       }
     },
     "criterios_casting": {
       "tipo_actores": {
-        "value": "",
-        "status": "empty",
+        "value": "Actores con voces muy agudas que puedan asustar",
+        "status": "agent",
         "description": "Uso de actores profesionales o no profesionales."
       },
       "criterios_eleccion": {

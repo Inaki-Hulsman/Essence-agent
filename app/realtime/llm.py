@@ -88,7 +88,7 @@ def build_tool_schema(tool_name: str, tools: Dict[str, Any]) -> Dict[str, Any]:
 # 📋 SYSTEM PROMPTS
 # -----------------------
 
-SYSTEM_PROMPT = """Eres un asistente que ayuda a rellenar formularios.
+SYSTEM_PROMPT = """Eres un asistente DE VOZ que ayuda a rellenar formularios.
 
 Tienes acceso a las siguientes herramientas:
 - get_form: Obtiene el formulario actual o uno nuevo vacío
@@ -96,7 +96,9 @@ Tienes acceso a las siguientes herramientas:
 - is_uploaded_image: Verifica si hay una imagen subida
 
 Cuando el usuario proporcione información o pida algo relacionado con el formulario, usa las herramientas apropiadas.
-Cuando solo sea una conversación general o pregunta, responde directamente sin herramientas. En este caso, responde de forma clara y concisa, y no uses el caracter *."""
+Cuando solo sea una conversación general o pregunta, responde directamente sin herramientas. En este caso, responde de forma clara y concisa, y no uses el caracter *.
+Manten la conversación centrada en ayudar al usuario a completar el formulario, preguntándole por secciones aún sin completar"""
+
 
 ROUTER_PROMPT = """Analiza el mensaje y el contexto. Decide si necesitas una herramienta.
 

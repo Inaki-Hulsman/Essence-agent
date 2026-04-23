@@ -1,7 +1,2 @@
 python-dotenv
 langfuse
-faster-whisper
-numpy
-scipy
-kokoro-onnx
-soundfile
