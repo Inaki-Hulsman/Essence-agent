@@ -12,7 +12,9 @@ from app.realtime.vllm_agent import VllmAgentRuntime
 from app.realtime.stt_service import STTService
 from app.realtime.tts_service import TTSService
 
-from app.tools.tools import get_form, upload_image, delete_loaded_image
+from app.services.schemas import INITIAL_INPUT
+from app.tools.tools import get_form, update_field, upload_image, delete_loaded_image
+
 
 
 app = FastAPI()
@@ -41,6 +43,11 @@ async def get_form_endpoint(new: bool = False):
     return get_form(new)
 
 
+@app.patch("/update_field")
+async def update_field_endpoint(body: dict):
+    return await update_field(body["path"], body["value"])
+
+
 @app.post("/upload_image")
 async def upload_image_endpoint(file: UploadFile = File(...)):
     return await upload_image(file)
@@ -53,6 +60,7 @@ async def delete_loaded_image_endpoint():
 
 @app.on_event("startup")
 async def startup():
+    print("🚀 Starting up: initializing STT and TTS services...")
     global _stt, _tts
     _stt = STTService()
     _stt.start()
@@ -71,6 +79,9 @@ async def websocket_vllm_agent(client_ws: WebSocket):
     stt = STTService()
     stt.start()
     text_queue: asyncio.Queue[str] = asyncio.Queue()
+
+    # Input inicial
+    await text_queue.put(INITIAL_INPUT)
 
     # Instanciar el agent runtime
     agent = VllmAgentRuntime(client_ws, _tts)
@@ -133,6 +144,7 @@ async def websocket_vllm_agent(client_ws: WebSocket):
                     break
 
                 agent.add_user_message(user_text)
+                print(f"🤖 Generating response for: {user_text}")
                 await agent.generate_response()
 
         except Exception as e:
@@ -177,6 +189,17 @@ async def websocket_openai_agent(client_ws: WebSocket):
             agent = OpenaiAgentRuntime(openai_ws)
             await agent.send_session_config()
 
+            # ✅ Mensaje de bienvenida: inyectar en la conversación y pedir respuesta
+            await openai_ws.send(json.dumps({
+                "type": "conversation.item.create",
+                "item": {
+                    "type": "message",
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": INITIAL_INPUT}]
+                }
+            }))
+            await openai_ws.send(json.dumps({"type": "response.create"}))
+
             # -----------------------
             # CLIENT → OPENAI
             # -----------------------
@@ -200,7 +223,7 @@ async def websocket_openai_agent(client_ws: WebSocket):
                         try:
                             data = json.loads(msg)
                         except json.JSONDecodeError:
-                            print("⚠️  Mensaje no-JSON:", msg)
+                            print("⚠️ Mensaje no-JSON:", msg)
                             continue
 
                         evt_type = data.get("type", "")
@@ -209,13 +232,12 @@ async def websocket_openai_agent(client_ws: WebSocket):
                         if evt_type == "response.output_item.added":
                             item = data.get("item", {})
                             if item.get("type") == "function_call":
-                                agent.on_function_call_started(item["call_id"],item["name"])
-                            # No reenviar al cliente (es tráfico interno)
+                                agent.on_function_call_started(item["call_id"], item["name"])
                             continue
 
                         # ── Tool call: delta de argumentos ────────────────────
                         elif evt_type == "response.function_call_arguments.delta":
-                            agent.on_arguments_delta(data["call_id"],data.get("delta", ""))
+                            agent.on_arguments_delta(data["call_id"], data.get("delta", ""))
                             continue
 
                         # ── Tool call: argumentos completos → ejecutar ────────
@@ -224,7 +246,7 @@ async def websocket_openai_agent(client_ws: WebSocket):
                             continue
 
                         # ── Todo lo demás va al cliente (audio, transcripts…) ──
-                        await client_ws.send_text(msg) # type: ignore
+                        await client_ws.send_text(msg)  # type: ignore
 
                 except Exception as e:
                     print("❌ openai_to_client:", e)

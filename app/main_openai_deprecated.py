@@ -171,7 +171,7 @@ TOOL_SCHEMAS = [
             "properties": {
                 "new": {
                     "type": "boolean",
-                    "description": "Si es True, devuelve un formulario vacío"
+                    "description": "Si es True, devuelve un formulario vacío, si es False devuelve el actual"
                 }
             },
         }

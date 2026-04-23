@@ -13,6 +13,7 @@ form_manager: FormManager = FormManager()  # Singleton FormManager
 
 
 def get_form(new: bool = False):
+    
     if new:
         form = form_manager.load_empty_form()
     else:
@@ -31,6 +32,24 @@ def get_form(new: bool = False):
         "form": form,
         "images": images
     }
+
+async def update_field(path: str, value: str):
+    """
+    path = "seccion.grupo.campo"  ej: "produccion.vision_estrategica.posicionamiento"
+    """
+    keys = path.split(".")
+    form = form_manager.get_form()
+    
+    node = form
+    for key in keys[:-1]:
+        node = node[key]
+    
+    node[keys[-1]]["value"] = value
+    node[keys[-1]]["status"] = "user"
+    
+    form_manager.update_form(form)
+    form_manager.save_form_to_json()
+    return {"ok": True, "path": path, "value": value}
 
 
 async def upload_image(file: UploadFile = File(...)):
@@ -68,6 +87,8 @@ async def delete_loaded_image():
 
 async def get_form_agent(new: bool = False) -> str:
     global form_manager
+
+    print(f"Called get_form with new: {new}")
 
     fm = form_manager
     if new:

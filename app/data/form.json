@@ -9,55 +9,52 @@
     ],
     "vision_estrategica": {
       "publico_objetivo": {
-        "value": "Pelirrojos introvertidos",
-        "status": "agent",
+        "value": "tigres de Cassiopeia loca",
+        "status": "user",
         "description": "Define el tipo de audiencia al que se dirige la película (edad, intereses, mercado)."
       },
       "posicionamiento": {
-        "value": "Se orientará tanto a festivales de cine de género como a plataformas de streaming.",
-        "status": "agent",
+        "value": "hola guapo",
+        "status": "user",
         "description": "Indica cómo se ubicará el proyecto en el mercado (comercial, autoral, festivales, plataformas)."
       },
       "escala_produccion": {
-        "value": "Presupuesto medio, suficiente para efectos prácticos y una ambientación de calidad.",
-        "status": "agent",
+        "value": "asasc",
+        "status": "user",
         "description": "Nivel de ambición y recursos de la producción (bajo, medio, alto presupuesto)."
       }
     },
     "identidad_del_proyecto": {
       "definicion_conceptual": {
-        "value": "Historia claustrofóbica y psicológica que redefine el miedo a lo cotidiano.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Resume el proyecto en una frase clara y concisa."
       },
       "propuesta_valor_diferencial": {
-        "value": "Enfoque en el terror atmosférico más que en los sobresaltos tradicionales.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Explica qué hace único al proyecto frente a otros similares."
       },
       "expectativa_mercado": {
-        "value": "Buena recepción en nichos de culto, con potencial de traspasar al público general.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe el potencial comercial o de recepción del proyecto."
       }
     },
     "configuracion_del_equipo": {
       "perfil_director": {
-        "value": "Director con experiencia en terror psicológico y habilidad para construir tensión.",
+        "value": "El perfil del director sea como el de Tarantino",
         "status": "agent",
-        "description": "Define el tipo de director/a ideal para el proyecto.",
-        "references": [
-          "descarga (1).png"
-        ]
+        "description": "Define el tipo de director/a ideal para el proyecto."
       },
       "perfil_compositor": {
-        "value": "Compositor para crear una partitura minimalista y perturbadora, con sonidos experimentales.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe el perfil musical o estilo del compositor/a deseado."
       },
       "colaboradores_clave": {
-        "value": "Diseñadores de producción con experiencia en terror, guionistas especializados en atmósferas opresivas, editores precisos en el ritmo del suspense.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Lista de colaboradores estratégicos importantes para el proyecto."
       }
     }
@@ -71,52 +68,52 @@
     ],
     "nota_de_direccion": {
       "vision_autoral": {
-        "value": "Explora el miedo psicológico y lo cotidiano transformado en amenaza.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Explica la mirada personal del director sobre la historia."
       },
       "referencias": {
-        "value": "Películas de terror psicológico como 'El Resplandor' y 'Hereditary', con enfoque en la tensión constante.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Incluye películas, obras o estilos que inspiran la dirección."
       },
       "tono_general": {
-        "value": "oscuro",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define el tono emocional y narrativo (dramático, ligero, oscuro, etc.)."
       }
     },
     "ritmo_y_narrativa": {
       "velocidad_narrativa": {
-        "value": "Variable, alternando momentos de calma inquietante con estallidos de terror.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe el ritmo general de la historia (lento, dinámico, variable)."
       },
       "uso_planos": {
-        "value": "Predominan los planos cortos y cerrados para crear claustrofobia, con montaje fragmentado en alta tensión.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define si predominan planos largos o montaje fragmentado."
       },
       "estructura": {
-        "value": "secuencial",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Indica si la narrativa es clásica, lineal o experimental."
       }
     },
     "universo_visual": {
       "referencias_esteticas": {
-        "value": "Geometría opresiva, composiciones que resalten asimetría y encierro, temperatura de color fría, iluminación con sombras marcadas, textura orgánica y algo de grano para acentuar lo atmosférico.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Referencias visuales que definen el estilo estético del proyecto."
       },
       "mood": {
-        "value": "siniestro y opresivo",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe la atmósfera emocional general de la película."
       },
       "color": {
-        "value": "verde oscuro",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define la aproximación al uso del color (paleta, contraste, simbolismo)."
       }
     }
@@ -130,8 +127,8 @@
     ],
     "estilo_global": {
       "sistema_formal": {
-        "value": "El sistema formal en el estilo global debe ser interesante y apto para una película de terror. Dado el enfoque cúbico, cada forma tendrá aristas marcadas y texturas simples pero con altos contrastes de luz y sombra para crear tensión. La coherencia visual se mantendrá con un diseño minimalista, pero donde cada objeto parezca ligeramente deformado o fuera de lugar, reforzando la sensación de inquietud.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define las formas, texturas y coherencia visual del mundo."
       },
       "traduccion_vision_director": {
@@ -142,25 +139,25 @@
     },
     "reglas_del_universo": {
       "normas_visuales": {
-        "value": "Las reglas del universo son cúbicas, similar a Minecraft. Todo está hecho con formas cúbicas, pero hay fluidos que se comportan como cubos más pequeños que imitan el movimiento líquido.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Reglas visuales que rigen el mundo narrativo."
       },
       "nivel_estilizacion": {
-        "value": "Predominan las texturas planas.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Grado de realismo o estilización del entorno."
       }
     },
     "acting": {
       "tipo": {
-        "value": "estilizada",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define si la actuación es naturalista o estilizada."
       },
       "nivel_exageracion": {
-        "value": "muy exagerado",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Nivel de exageración interpretativa, especialmente en animación."
       }
     }
@@ -174,8 +171,8 @@
     ],
     "escenarios": {
       "diseno_espacios": {
-        "value": "Espacios estelares con planetas de fondo y detalles visuales impresionantes.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Diseño visual de los espacios donde ocurre la acción."
       }
     },
@@ -188,12 +185,9 @@
     },
     "vestuario": {
       "linea_estetica": {
-        "value": "Estilo peculiar y fantástico con motivos de calamar, colores vivos y look caricaturesco.",
-        "status": "agent",
-        "description": "Estilo visual del vestuario y su coherencia con el universo.",
-        "references": [
-          "ComfyUI_00002_.png"
-        ]
+        "value": "",
+        "status": "empty",
+        "description": "Estilo visual del vestuario y su coherencia con el universo."
       }
     }
   },
@@ -206,8 +200,8 @@
     ],
     "camara_y_optica": {
       "lentes": {
-        "value": "40 milímetros",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Tipo de lentes y su efecto visual en la imagen."
       },
       "movimiento_camara": {
@@ -272,8 +266,8 @@
     ],
     "estilo_de_movimiento": {
       "tipo": {
-        "value": "",
-        "status": "empty",
+        "value": "sdfasdfasdfasd",
+        "status": "user",
         "description": "Tipo de movimiento (realista, cartoon, captura de movimiento)."
       },
       "referencias": {
@@ -377,25 +371,25 @@
     ],
     "enfoque_musical": {
       "estilo": {
-        "value": "minimalista y disonante",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Estilo musical predominante."
       },
       "instrumentacion": {
-        "value": "cuerdas frotadas, como violines y violonchelos, sintetizadores oscuros y sonidos electrónicos experimentales",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Instrumentos principales utilizados."
       }
     },
     "funcion_dramatica": {
       "leitmotivs": {
-        "value": "Uso sutil de temas musicales para momentos clave o personajes",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Uso de temas musicales asociados a personajes o ideas."
       },
       "rol_musica": {
-        "value": "ambiental, ayudando a construir la atmósfera de suspense y miedo",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Rol de la música en la narrativa (protagonista o ambiental)."
       }
     }
@@ -409,13 +403,13 @@
     ],
     "enfoque_sonoro": {
       "realismo_vs_estilizacion": {
-        "value": "estilización sonora",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Nivel de realismo o estilización sonora."
       },
       "tipo_efectos": {
-        "value": "notas de violín largas, atmósfera inquietante",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Tipo de efectos (realistas, exagerados, cartoon)."
       }
     },
@@ -441,32 +435,32 @@
     ],
     "enfoque_personajes": {
       "estilo": {
-        "value": "estilizado",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Grado de naturalismo o estilización de los personajes."
       },
       "estetica": {
-        "value": "miedo",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Tipo de estética (normativa, estilizada, feísta, etc.)."
       }
     },
     "morfologia_animacion": {
       "proporciones": {
-        "value": "bolas peludas flotantes",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Proporciones corporales de los personajes."
       },
       "nivel_caricaturizacion": {
-        "value": "muy caricaturesco",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Nivel de exageración visual."
       }
     },
     "criterios_casting": {
       "tipo_actores": {
-        "value": "Actores con voces muy agudas que puedan asustar",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Uso de actores profesionales o no profesionales."
       },
       "criterios_eleccion": {

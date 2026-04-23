@@ -71,6 +71,8 @@ def build_tool_schema(tool_name: str, tools: Dict[str, Any]) -> Dict[str, Any]:
 # 📋 SYSTEM PROMPTS
 # -----------------------
 
+INITIAL_INPUT = "Saluda al usuario y preséntate brevemente."
+
 SYSTEM_PROMPT = """Eres un asistente DE VOZ que ayuda a rellenar formularios.
 
 Tienes acceso a las siguientes herramientas:
@@ -112,7 +114,7 @@ TOOL_SCHEMAS = [
             "properties": {
                 "new": {
                     "type": "boolean",
-                    "description": "Si es True, devuelve un formulario vacío"
+                    "description": "Si es True, devuelve un formulario vacío. Si es False, devuelve el actual"
                 }
             },
             "additionalProperties": False
