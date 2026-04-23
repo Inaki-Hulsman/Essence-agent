@@ -1,0 +1,69 @@
+services:
+
+  whisper:
+    build: ./whisper_service
+    ports:
+      - "8001:8001"
+    environment:
+      WHISPER_MODEL_SIZE: medium      # tiny/base/small/medium/large-v3
+      WHISPER_DEVICE: cuda
+      WHISPER_COMPUTE_TYPE: float16
+      VAD_SILENCE_THRESHOLD_MS: 700
+      VAD_MIN_SPEECH_MS: 200
+      VAD_ENERGY_THRESHOLD: 300
+    volumes:
+      # Cachea los pesos de Whisper entre reinicios
+      - whisper_cache:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  kokoro:
+    build: ./kokoro_service
+    ports:
+      - "8003:8002"
+    environment:
+      KOKORO_VOICE: em_alex           # ef_dora, em_alex, es_*
+      KOKORO_LANG: es
+      KOKORO_SPEED: "1.0"
+    volumes:
+      # Monta la carpeta local donde tienes los .onnx y .bin
+      - ./kokoro_models:/models:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  gemma:
+    image: vllm/vllm-openai:gemma4-cu130
+    container_name: gemma
+    command: >
+      --model google/gemma-4-26B-A4B-it
+      --dtype auto
+      --max-model-len 70000
+      --gpu-memory-utilization 0.60
+    ports:
+      - "8000:8000"
+    volumes:
+      - /mnt/nas/ImasD/LLM_local_models:/root/.cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ipc: host
+    restart: unless-stopped
+
+volumes:
+  whisper_cache:
