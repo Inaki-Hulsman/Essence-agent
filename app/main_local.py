@@ -155,19 +155,13 @@ async def startup():
 @app.websocket("/ws")
 async def websocket_agent(client_ws: WebSocket):
     await client_ws.accept()
-    print("🟢 Client connected")
 
-    # Cada conexión tiene su propia conversación y buffer STT
     conversation: list = []
-    stt = STTService()          # instancia por conexión para aislar buffers VAD
+    stt = STTService()
     stt.start()
-
-    # Cola para pasar texto final del STT al pipeline LLM→TTS
     text_queue: asyncio.Queue[str] = asyncio.Queue()
+    cancel_event = asyncio.Event()  # ✅ señal de interrupción
 
-    # -------------------------------------------------------------------------
-    # 📥  TAREA 1: recibir audio del cliente, alimentar STT
-    # -------------------------------------------------------------------------
     async def receive_audio():
         import base64
         try:
@@ -178,29 +172,17 @@ async def websocket_agent(client_ws: WebSocket):
                 except json.JSONDecodeError:
                     continue
 
-
-                msg_type = msg.get("type", "")
-                
-
-                if msg_type == "audio":
-                    # PCM16 en base64
+                if msg.get("type") == "audio":
                     pcm = base64.b64decode(msg.get("audio", ""))
                     stt.push_audio(pcm)
-
-                elif msg_type == "session.stop":
+                elif msg.get("type") == "session.stop":
                     break
-
         except WebSocketDisconnect:
             pass
-        except Exception as e:
-            print(f"❌ receive_audio: {e}")
         finally:
             stt.stop()
-            await text_queue.put(None)  # type: ignore - señal de cierre para el pipeline LLM→TTS
+            await text_queue.put(None) # type: ignore
 
-    # -------------------------------------------------------------------------
-    # 📡  TAREA 2: escuchar eventos STT y reenviar al cliente / encolar texto
-    # -------------------------------------------------------------------------
     async def process_stt_events():
         try:
             async for event in stt.events():
@@ -210,80 +192,87 @@ async def websocket_agent(client_ws: WebSocket):
                         "text": event["text"]
                     }))
 
+                elif event["type"] == "speech.started":
+                    # ✅ Interrumpir: cancelar pipeline actual y avisar al frontend
+                    cancel_event.set()
+                    await client_ws.send_text(json.dumps({
+                        "type": "input_audio_buffer.speech_started"
+                    }))
+
                 elif event["type"] == "transcript.final":
                     text = event["text"]
-                    print(f"🎤 Final transcript: {text}")
-
-                    # Enviar al cliente para mostrar en UI
+                    print(f"🎤 Final: {text}")
+                    cancel_event.clear()  # ✅ reset para la nueva respuesta
                     await client_ws.send_text(json.dumps({
                         "type": "transcript.final",
                         "text": text
                     }))
-
-                    # Encolar para el pipeline LLM→TTS
                     await text_queue.put(text)
-
-                else:
-                    print(f"⚠️  Unknown STT event: {event}")
 
         except Exception as e:
             print(f"❌ process_stt_events: {e}")
 
-    # -------------------------------------------------------------------------
-    # 🧠  TAREA 3: LLM + TTS — procesar mensajes del usuario en orden
-    # -------------------------------------------------------------------------
     async def llm_tts_pipeline():
         import base64
 
-        async def _send_audio_chunk(pcm: bytes):
-            """Enviar chunk de audio PCM16 al cliente en base64."""
-            await client_ws.send_text(json.dumps({
-                "type": "response.audio.delta",
-                "data": base64.b64encode(pcm).decode()
-            }))
-
         try:
             while True:
-                print("⏳ Waiting for user text...")
                 user_text = await text_queue.get()
                 if user_text is None:
-                    break  # señal de cierre
+                    break
 
-                # Añadir mensaje del usuario al historial
                 conversation.append({"role": "user", "content": user_text})
-
-                # ── LLM en streaming ──────────────────────────────────────
                 full_response = ""
 
                 async def llm_gen():
-                    """Generador que también reenvía chunks de texto al cliente."""
                     nonlocal full_response
                     async for chunk in stream_llm_response(conversation, TOOLS):
+                        # ✅ Parar si llega interrupción
+                        if cancel_event.is_set():
+                            return
                         full_response += chunk
-                        # Reenviar texto al cliente (para subtítulos, debug…)
                         await client_ws.send_text(json.dumps({
                             "type": "response.text.delta",
                             "text": chunk
                         }))
                         yield chunk
 
-                # ── TTS en streaming sobre el texto del LLM ───────────────
-                async for pcm_chunk in _tts.synthesize_stream(llm_gen()):  # type: ignore
-                    await _send_audio_chunk(pcm_chunk)
+                # ✅ Síntesis con check de cancelación en cada chunk de audio
+                async for pcm_chunk in _tts.synthesize_stream(llm_gen()): # type: ignore
+                    if cancel_event.is_set():
+                        break
+                    await client_ws.send_text(json.dumps({
+                        "type": "response.audio.delta",
+                        "data": base64.b64encode(pcm_chunk).decode()
+                    }))
 
-                # Notificar fin de respuesta
-                await client_ws.send_text(json.dumps({
-                    "type": "response.text.done",
-                    "text": full_response
-                }))
-                await client_ws.send_text(json.dumps({
-                    "type": "response.audio.done"
-                }))
-
-                print(f"🤖 Response done ({len(full_response)} chars)")
+                if not cancel_event.is_set():
+                    # Solo notificar "done" si no fue interrumpido
+                    await client_ws.send_text(json.dumps({
+                        "type": "response.text.done",
+                        "text": full_response
+                    }))
+                    await client_ws.send_text(json.dumps({
+                        "type": "response.audio.done"
+                    }))
+                else:
+                    # ✅ Truncar el historial — no añadir respuesta incompleta
+                    print("⚡ Respuesta interrumpida, descartando")
 
         except Exception as e:
             print(f"❌ llm_tts_pipeline: {e}")
+
+    try:
+        await asyncio.gather(
+            receive_audio(),
+            process_stt_events(),
+            llm_tts_pipeline(),
+        )
+    except Exception as e:
+        print(f"🔥 WS error: {e}")
+    finally:
+        stt.stop()
+        await client_ws.close()
 
     # -------------------------------------------------------------------------
     # 🚀  Lanzar las tres tareas en paralelo
@@ -300,3 +289,4 @@ async def websocket_agent(client_ws: WebSocket):
         stt.stop()
         print("🔴 Connection closed")
         await client_ws.close()
+        
