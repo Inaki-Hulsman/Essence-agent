@@ -2,7 +2,9 @@ import json
 import asyncio
 import base64
 from app.realtime.llm import stream_llm_response
+from app.realtime.tts_service import TTSService
 from app.tools.tools import TOOLS
+from app.config import DEFAULT_VOICE
 
 
 class VllmAgentRuntime:
@@ -11,7 +13,7 @@ class VllmAgentRuntime:
     Encapsula la lógica del pipeline LLM + TTS.
     """
 
-    def __init__(self, client_ws, tts_service):
+    def __init__(self, client_ws, tts_service : TTSService):
         """
         Args:
             client_ws: WebSocket del cliente
@@ -21,10 +23,16 @@ class VllmAgentRuntime:
         self.tts_service = tts_service
         self.conversation: list = []
         self.cancel_event = asyncio.Event()
+        self.voice = DEFAULT_VOICE
 
     def add_user_message(self, text: str):
         """Añade un mensaje del usuario a la conversación."""
         self.conversation.append({"role": "user", "content": text})
+
+    def set_voice(self, voice : str):
+        print("voz:" + voice)
+        """Cambia la voz del agente"""
+        self.voice = voice
 
     async def generate_response(self):
         """
@@ -55,7 +63,7 @@ class VllmAgentRuntime:
 
         # Síntesis de audio con check de cancelación en cada chunk
         try:
-            async for pcm_chunk in self.tts_service.synthesize_stream(llm_gen()):
+            async for pcm_chunk in self.tts_service.synthesize_stream(llm_gen(), voice= self.voice):
                 if self.cancel_event.is_set():
                     break
 

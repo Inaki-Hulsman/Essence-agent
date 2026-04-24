@@ -73,6 +73,8 @@ async def startup():
 
 @app.websocket("/ws-vllm")
 async def websocket_vllm_agent(client_ws: WebSocket):
+    voice = client_ws.query_params.get("voice", "ef_dora")
+
     await client_ws.accept()
     print("🟢 Client connected")
 
@@ -84,7 +86,9 @@ async def websocket_vllm_agent(client_ws: WebSocket):
     await text_queue.put(INITIAL_INPUT)
 
     # Instanciar el agent runtime
-    agent = VllmAgentRuntime(client_ws, _tts)
+    agent = VllmAgentRuntime(client_ws, _tts) # type: ignore
+    agent.set_voice(voice)
+
 
     async def receive_audio():
         import base64
@@ -99,6 +103,9 @@ async def websocket_vllm_agent(client_ws: WebSocket):
                 if msg.get("type") == "audio":
                     pcm = base64.b64decode(msg.get("audio", ""))
                     stt.push_audio(pcm)
+                elif msg.get("type") == "config":
+                    voice = msg.get("voice", "ef_dora")
+                    agent.set_voice(voice)
                 elif msg.get("type") == "session.stop":
                     break
         except WebSocketDisconnect:

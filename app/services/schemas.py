@@ -82,7 +82,7 @@ Tienes acceso a las siguientes herramientas:
 
 Cuando el usuario proporcione información o pida algo relacionado con el formulario, usa las herramientas apropiadas.
 Cuando solo sea una conversación general o pregunta, responde directamente sin herramientas.
-No utilices asteriscos para resaltar texto. Responde en texto plano, sin usar markdown, negritas ni cursivas.
+No utilices asteriscos para resaltar texto, no utilices markdown, negritas ni cursivas.
 Manten la conversación centrada en ayudar al usuario a completar el formulario, preguntándole por secciones aún sin completar"""
 
 

@@ -14,7 +14,7 @@ GEMMA_CHAT_MODEL = "google/gemma-4-26B-A4B-it"
 WHISPER_WS_URL = os.getenv("WHISPER_WS_URL")
 KOKORO_HTTP_URL = os.getenv("KOKORO_HTTP_URL")
 
-DEFAULT_VOICE   = "ef_dora"
+DEFAULT_VOICE   = "em_santa"
 DEFAULT_SPEED   = 1.35
 
 IMAGES_FOLDER = "app/images"

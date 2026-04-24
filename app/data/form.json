@@ -26,24 +26,24 @@
     },
     "identidad_del_proyecto": {
       "definicion_conceptual": {
-        "value": "",
-        "status": "empty",
+        "value": "Una película sobre chimpancés espaciales que luchan contra babuinos de Marte.",
+        "status": "agent",
         "description": "Resume el proyecto en una frase clara y concisa."
       },
       "propuesta_valor_diferencial": {
-        "value": "",
-        "status": "empty",
+        "value": "La idea de tener babuinos espaciales con trajes únicos es original y llamativa, lo que diferencia al proyecto de otros conceptos similares.",
+        "status": "agent",
         "description": "Explica qué hace único al proyecto frente a otros similares."
       },
       "expectativa_mercado": {
-        "value": "",
-        "status": "empty",
+        "value": "Se espera que tenga un atractivo considerable en festivales espaciales y spacecoms, siendo muy interesante para esos públicos.",
+        "status": "agent",
         "description": "Describe el potencial comercial o de recepción del proyecto."
       }
     },
     "configuracion_del_equipo": {
       "perfil_director": {
-        "value": "El perfil del director sea como el de Tarantino",
+        "value": "El perfil del director sea como el de Tarantino y un poco como Shakira",
         "status": "agent",
         "description": "Define el tipo de director/a ideal para el proyecto."
       },
