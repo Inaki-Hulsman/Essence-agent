@@ -1,4 +1,5 @@
 import asyncio
+from fastapi.websockets import WebSocketState
 import websockets
 import json
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
@@ -103,6 +104,16 @@ async def websocket_vllm_agent(client_ws: WebSocket):
                 if msg.get("type") == "audio":
                     pcm = base64.b64decode(msg.get("audio", ""))
                     stt.push_audio(pcm)
+                elif msg.get("type") == "text_input":
+                    # Mensaje de texto del usuario — saltar STT, ir directo al pipeline
+                    text = msg.get("text", "").strip()
+                    if text:
+                        agent.reset_interrupt()
+                        await client_ws.send_text(json.dumps({
+                            "type": "transcript.final",
+                            "text": text
+                        }))
+                        await text_queue.put(text)
                 elif msg.get("type") == "config":
                     voice = msg.get("voice", "ef_dora")
                     agent.set_voice(voice)
@@ -171,7 +182,11 @@ async def websocket_vllm_agent(client_ws: WebSocket):
     finally:
         stt.stop()
         print("🔴 Connection closed")
-        await client_ws.close()
+        try:
+            if client_ws.application_state == WebSocketState.CONNECTED:
+                await client_ws.close()
+        except RuntimeError:
+            pass
         
 
 # -----------------------
@@ -213,8 +228,24 @@ async def websocket_openai_agent(client_ws: WebSocket):
             async def client_to_openai():
                 try:
                     while True:
-                        msg = await client_ws.receive_text()
-                        await openai_ws.send(msg)
+                        raw = await client_ws.receive_text()
+                        try:
+                            msg = json.loads(raw)
+                        except json.JSONDecodeError:
+                            await openai_ws.send(raw)
+                            continue
+
+                        if msg.get("type") == "text_input":
+                            text = msg.get("text", "").strip()
+                            if text:
+                                # Mostrar en el chat del cliente
+                                await client_ws.send_text(json.dumps({
+                                    "type": "transcript.final",
+                                    "text": text
+                                }))
+                                await agent.send_text_message(text)
+                        else:
+                            await openai_ws.send(raw)
                 except Exception as e:
                     print("❌ client_to_openai:", e)
 
@@ -268,4 +299,8 @@ async def websocket_openai_agent(client_ws: WebSocket):
 
     finally:
         print("🔴 Connection closed")
-        await client_ws.close()
+        try:
+            if client_ws.application_state == WebSocketState.CONNECTED:
+                await client_ws.close()
+        except RuntimeError:
+            pass

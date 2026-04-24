@@ -48,7 +48,7 @@ def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
 @observe(name="extract-section-info", as_type="span")
 def extract_section_info(user_message: list, new_form : dict, form_class: type, image = None, image_type = None) -> BaseModel:
 
-    print(f"Extracting info for section with message: {user_message} and form: {new_form}")
+    # print(f"Extracting info for section with message: {user_message} and form: {new_form}")
     # Build prompt
     prompt = langfuse.get_prompt("Extract_section_info")
 
@@ -57,7 +57,7 @@ def extract_section_info(user_message: list, new_form : dict, form_class: type, 
         chat=user_message
     ) # type: ignore
 
-    print("Compiled prompt for extraction:", compiled_prompt)
+    # print("Compiled prompt for extraction:", compiled_prompt)
 
     print(f"Image provided: {image is not None}, image type: {image_type}")
 

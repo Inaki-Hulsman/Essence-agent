@@ -9,43 +9,44 @@
     ],
     "vision_estrategica": {
       "publico_objetivo": {
-        "value": "tigres de Cassiopeia loca",
-        "status": "user",
+        "value": "adolescentes reprimidos que les gusta sacarse imágenes delante de pulpos",
+        "status": "agent",
         "description": "Define el tipo de audiencia al que se dirige la película (edad, intereses, mercado)."
       },
       "posicionamiento": {
-        "value": "hola guapo",
-        "status": "user",
+        "value": "",
+        "status": "empty",
         "description": "Indica cómo se ubicará el proyecto en el mercado (comercial, autoral, festivales, plataformas)."
       },
       "escala_produccion": {
-        "value": "asasc",
-        "status": "user",
+        "value": "",
+        "status": "empty",
         "description": "Nivel de ambición y recursos de la producción (bajo, medio, alto presupuesto)."
       }
     },
     "identidad_del_proyecto": {
       "definicion_conceptual": {
-        "value": "Una película sobre chimpancés espaciales que luchan contra babuinos de Marte.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Resume el proyecto en una frase clara y concisa."
       },
       "propuesta_valor_diferencial": {
-        "value": "La idea de tener babuinos espaciales con trajes únicos es original y llamativa, lo que diferencia al proyecto de otros conceptos similares.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Explica qué hace único al proyecto frente a otros similares."
       },
       "expectativa_mercado": {
-        "value": "Se espera que tenga un atractivo considerable en festivales espaciales y spacecoms, siendo muy interesante para esos públicos.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe el potencial comercial o de recepción del proyecto."
       }
     },
     "configuracion_del_equipo": {
       "perfil_director": {
-        "value": "El perfil del director sea como el de Tarantino y un poco como Shakira",
+        "value": "Un perfil de director diferente al estilo Tarantino, que debe tener una visión del mundo similar al estilo visual de la imagen subida.",
         "status": "agent",
-        "description": "Define el tipo de director/a ideal para el proyecto."
+        "description": "Define el tipo de director/a ideal para el proyecto.",
+        "references": []
       },
       "perfil_compositor": {
         "value": "",
@@ -185,9 +186,12 @@
     },
     "vestuario": {
       "linea_estetica": {
-        "value": "",
-        "status": "empty",
-        "description": "Estilo visual del vestuario y su coherencia con el universo."
+        "value": "Estilo futurista y lúdico, con un personaje que lleva un mono de mezclilla manchado de pintura y un diseño en colores neón. Evoca una estética de criatura marina con un enfoque moderno.a  ",
+        "status": "user",
+        "description": "Estilo visual del vestuario y su coherencia con el universo.",
+        "references": [
+          "ComfyUI_temp_ptfyz_00002_.png"
+        ]
       }
     }
   },
@@ -266,8 +270,8 @@
     ],
     "estilo_de_movimiento": {
       "tipo": {
-        "value": "sdfasdfasdfasd",
-        "status": "user",
+        "value": "",
+        "status": "empty",
         "description": "Tipo de movimiento (realista, cartoon, captura de movimiento)."
       },
       "referencias": {

@@ -101,6 +101,7 @@ async def get_form_agent(new: bool = False) -> str:
 
 async def extract_and_update(message: str, selected_sections: List[str], use_loaded_image: bool = False) -> str:
     
+    print("Calling extract_and_update, use_image = ", use_loaded_image)
     global form_manager
 
     fm = form_manager
@@ -129,7 +130,92 @@ async def extract_and_update(message: str, selected_sections: List[str], use_loa
 
 async def is_uploaded_image() -> bool:
     global form_manager
-    return form_manager.exists_current_image()
+    is_image = form_manager.exists_current_image()
+    print("Called is_image, result: ", is_image)
+    return is_image
+
+
+async def remove_image_reference(field_path: str, image_name: str):
+    """
+    Desasocia una imagen de un campo del formulario.
+    field_path = "seccion.grupo.campo"
+    Si ningún otro campo referencia la imagen, borra el archivo del disco.
+    """
+    global form_manager
+    fm = form_manager
+    form = fm.get_form()
+
+    # 1. Quitar la referencia del campo
+    keys = field_path.split(".")
+    node = form
+    try:
+        for key in keys[:-1]:
+            node = node[key]
+        field = node[keys[-1]]
+        refs = field.get("references", [])
+        if image_name in refs:
+            refs.remove(image_name)
+        field["references"] = refs
+    except (KeyError, TypeError) as e:
+        return {"error": f"Campo no encontrado: {e}"}
+
+    fm.update_form(form)
+    fm.save_form_to_json()
+
+    # 2. Comprobar si algún otro campo sigue referenciando la imagen
+    all_refs = fm.get_all_image_references()
+    if image_name not in all_refs:
+        # Nadie más la usa → borrar archivo
+        img_path = f"{IMAGES_FOLDER}/{image_name}"
+        if os.path.exists(img_path):
+            os.remove(img_path)
+            logger.info(f"Imagen eliminada del disco: {img_path}")
+
+    return {"ok": True, "deleted_from_disk": image_name not in all_refs}
+
+
+async def upload_section_image(file: UploadFile, field_path: str):
+    """
+    Sube una imagen y la asocia directamente a un campo del formulario.
+    field_path = "seccion.grupo.campo"  (o "seccion" para nivel sección)
+    """
+    global form_manager
+    fm = form_manager
+
+    try:
+        os.makedirs(IMAGES_FOLDER, exist_ok=True)
+        file.file.seek(0)
+        image_path = f"{IMAGES_FOLDER}/{file.filename}"
+
+        with open(image_path, "wb") as f:
+            f.write(file.file.read())
+
+        # Asociar al campo si se especificó ruta completa (3 niveles)
+        keys = field_path.split(".")
+        if len(keys) == 3:
+            form = fm.get_form()
+            node = form
+            try:
+                for key in keys[:-1]:
+                    node = node[key]
+                field = node[keys[-1]]
+                refs = field.get("references", [])
+                if file.filename not in refs:
+                    refs.append(file.filename)
+                field["references"] = refs
+                fm.update_form(form)
+                fm.save_form_to_json()
+            except (KeyError, TypeError):
+                pass  # path inválido, imagen subida igualmente
+
+        # También registrar como imagen activa del form_manager
+        if file.filename and file.content_type:
+            fm.set_current_image(file.filename, file.content_type)
+
+        return {"status": "ok", "filename": file.filename}
+
+    except Exception as e:
+        return {"error": str(e)}
 
 
 TOOLS = {

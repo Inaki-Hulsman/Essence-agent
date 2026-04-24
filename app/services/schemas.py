@@ -77,7 +77,7 @@ SYSTEM_PROMPT = """Eres un asistente DE VOZ que ayuda a rellenar formularios.
 
 Tienes acceso a las siguientes herramientas:
 - get_form: Obtiene el formulario actual o uno nuevo vacío
-- extract_and_update: Extrae información del usuario y actualiza secciones del formulario
+- extract_and_update: Extrae información del usuario y actualiza secciones del formulario, puede usar la información de la imagen subida para analizarla y añadirla a secciones del formulario.
 - is_uploaded_image: Verifica si hay una imagen subida
 
 Cuando el usuario proporcione información o pida algo relacionado con el formulario, usa las herramientas apropiadas.
@@ -123,7 +123,7 @@ TOOL_SCHEMAS = [
     {
         "type": "function",
         "name": "extract_and_update",
-        "description": "Extrae información del mensaje del usuario para secciones seleccionadas y actualiza el formulario",
+        "description": "Extrae información del usuario y actualiza secciones del formulario, puede usar la información de la imagen subida para analizarla y añadirla a secciones del formulario.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -138,10 +138,10 @@ TOOL_SCHEMAS = [
                 },
                 "use_loaded_image": {
                     "type": "boolean",
-                    "description": "True si hay imagen del usuario relevante para estos campos"
+                    "description": "el valor debe ser True si el usuario pide que se añada informacion de la imagen cargada, False si no se hace alusión a la imagen"
                 }
             },
-            "required": ["message", "selected_sections"],
+            "required": ["message", "selected_sections", "use_loaded_image"],
             "additionalProperties": False
         }
     },

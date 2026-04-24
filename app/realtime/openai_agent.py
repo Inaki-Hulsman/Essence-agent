@@ -22,6 +22,9 @@ class OpenaiAgentRuntime:
                 "voice": "alloy",
                 "input_audio_format": "pcm16",
                 "output_audio_format": "pcm16",
+                "input_audio_transcription": {   # ← añadir esto
+                    "model": "whisper-1"
+                },
                 "turn_detection": {
                     "type": "server_vad",
                     "threshold": 0.5,
@@ -43,6 +46,18 @@ class OpenaiAgentRuntime:
         except Exception as e:
             logger.error(f"Error ejecutando {name}: {e}")
             return f"Error ejecutando {name}: {e}"
+
+    async def send_text_message(self, text: str):
+        """Inyecta un mensaje de texto del usuario y solicita respuesta."""
+        await self.openai_ws.send(json.dumps({
+            "type": "conversation.item.create",
+            "item": {
+                "type": "message",
+                "role": "user",
+                "content": [{"type": "input_text", "text": text}]
+            }
+        }))
+        await self.openai_ws.send(json.dumps({"type": "response.create"}))
 
     def on_function_call_started(self, call_id: str, name: str):
         """Llamado cuando OpenAI anuncia una nueva function call (output_item.added)."""
