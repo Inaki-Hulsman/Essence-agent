@@ -1,4 +1,6 @@
 
+from typing import List
+
 from langfuse import observe
 from pydantic import BaseModel
 from app.services.observability import langfuse
@@ -47,7 +49,7 @@ llm_models = LLM_models()
 # -----------------------
 # 🧠 LLAMDAS BÁSICAS
 # -----------------------
-@observe(name="llm-call", as_type="span")
+@observe(name="llm-call", as_type="generation")
 def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
 
     prompt = langfuse.get_prompt("Essence-main-chat")
@@ -73,8 +75,8 @@ def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
     return content
 
 
-@observe(name="extract-section-info", as_type="span")
-def extract_section_info(user_message: list, new_form : dict, form_class: type, image = None, image_type = None) -> BaseModel:
+@observe(name="extract-section-info", as_type="generation")
+def extract_info(user_message: list, new_form : dict, form_class: type, image = None, image_type = None) -> BaseModel:
 
     # print(f"Extracting info for section with message: {user_message} and form: {new_form}")
     # Build prompt
@@ -85,7 +87,7 @@ def extract_section_info(user_message: list, new_form : dict, form_class: type, 
         chat=user_message
     ) # type: ignore
 
-    # print("Compiled prompt for extraction:", compiled_prompt)
+    print("Compiled prompt for extraction:", compiled_prompt)
 
     print(f"Image provided: {image is not None}, image type: {image_type}")
 
@@ -108,31 +110,20 @@ def extract_section_info(user_message: list, new_form : dict, form_class: type, 
             }
         ] + compiled_prompt
 
-    
     model = llm_models.get_current_model()
        
-    # print(f"Compiled prompt: {compiled_prompt}")
-    # print(f"form_class: {form_class.__dict__}")
     print(f"Using model: {model.model_name}")
-
-
-
-    #TODO: peta aqui
 
     try:
         response = model.client.chat.completions.parse(
             model=model.model_name,
             messages=compiled_prompt,
             response_format=form_class,
-            timeout=4
+            timeout=12
         )
-    
-
         print(response.usage)
 
         parsed = response.choices[0].message.parsed # type: ignore
-
-
         if parsed is None:
             # fallback defensivo
             return form_class()
@@ -145,7 +136,44 @@ def extract_section_info(user_message: list, new_form : dict, form_class: type, 
 
 
 
+@observe(name="correct-fields", as_type="generation")
+def correct_fields(actual_fields : list, posible_fields : list , message : str) -> list:
 
+
+    print("CORRECTING...")
+    prompt = langfuse.get_prompt("correct_fields")
+
+    compiled_prompt : list= prompt.compile(
+        actual_fields = actual_fields,
+        posible_fields=posible_fields,
+        message=message
+    ) # type: ignore
+
+    model = llm_models.get_current_model()
+
+    class Output(BaseModel):
+        items: List[str]
+
+    try:
+        response = model.client.chat.completions.parse(
+            model=model.model_name,
+            messages=compiled_prompt,
+            response_format=Output,
+            timeout=12
+        )
+        print(response.usage)
+
+        parsed = response.choices[0].message.parsed # type: ignore
+        print(parsed)
+        if parsed is None:
+            # fallback defensivo
+            return []
+
+        return parsed.items
+    
+    except Exception as e:
+        print(e)
+        return [] 
 
 
 

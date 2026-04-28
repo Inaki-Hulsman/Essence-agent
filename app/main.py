@@ -14,7 +14,7 @@ from app.services.stt_service import STTService
 from app.services.tts_service import TTSService
 
 from app.agents.schemas import INITIAL_INPUT
-from app.form.functions import get_form, get_images, update_field, upload_image, delete_loaded_image, remove_image_reference, upload_section_image
+from app.form.functions import get_form, get_form_text, get_images, update_field, upload_image, delete_loaded_image, remove_image_reference, upload_section_image
 
 from app.agents.llm import llm_models
 
@@ -226,13 +226,13 @@ async def websocket_openai_agent(client_ws: WebSocket):
             agent = OpenaiAgentRuntime(openai_ws)
             await agent.send_session_config()
 
-            # ✅ Mensaje de bienvenida: inyectar en la conversación y pedir respuesta
+            # ✅ Mensaje de bienvenida: inyectar en la conversación y pedir respuesta, AÑADE EL CONTEXTO DEL FORMULARIO
             await openai_ws.send(json.dumps({
                 "type": "conversation.item.create",
                 "item": {
                     "type": "message",
                     "role": "user",
-                    "content": [{"type": "input_text", "text": INITIAL_INPUT}]
+                    "content": [{"type": "input_text", "text": f"Este es el estado actual del formulario: {get_form_text()}.\n" + INITIAL_INPUT}]
                 }
             }))
             await openai_ws.send(json.dumps({"type": "response.create"}))

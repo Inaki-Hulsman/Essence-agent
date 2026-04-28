@@ -76,8 +76,9 @@ INITIAL_INPUT = "Saluda al usuario y preséntate brevemente."
 SYSTEM_PROMPT = """Eres un asistente DE VOZ que ayuda a rellenar formularios.
 
 Tienes acceso a las siguientes herramientas:
+- get_form: Obtiene el estado formulario actual.
 - new_form: Crea un nuevo formulario vacío, sobreescribiendo el existente
-- extract_and_update: Extrae información del usuario y actualiza secciones del formulario, puede usar la información de la imagen subida para analizarla y añadirla a secciones del formulario.
+- extract_and_update: Extrae información del usuario y actualiza los campos del formulario, puede usar la información de la imagen subida para analizarla y añadirla a los campos del formulario.
 - is_uploaded_image: Verifica si hay una imagen subida
 
 Cuando el usuario proporcione información o pida algo relacionado con el formulario, usa las herramientas apropiadas.
@@ -109,6 +110,15 @@ Genera SOLO los argumentos en JSON, sin texto adicional."""
 TOOL_SCHEMAS = [
     {
         "type": "function",
+        "name": "get_form",
+        "description": "Obtiene el estado formulario actual.",
+        "parameters": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": False
+        }
+    },{
+        "type": "function",
         "name": "new_form",
         "description": "Crea un nuevo formulario vacío, sobreescribiendo el existente",
         "parameters": {
@@ -120,7 +130,7 @@ TOOL_SCHEMAS = [
     {
         "type": "function",
         "name": "extract_and_update",
-        "description": "Extrae información del usuario y actualiza secciones del formulario, puede usar la información de la imagen subida para analizarla y añadirla a secciones del formulario.",
+        "description": "Extrae información del usuario y actualiza los campos del formulario, puede usar la información de la imagen subida para analizarla y añadirla a los campos del formulario.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -128,10 +138,10 @@ TOOL_SCHEMAS = [
                     "type": "string",
                     "description": "Mensaje del usuario con la información a extraer"
                 },
-                "selected_sections": {
+                "selected_fields": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Rutas completas de secciones del formulario, ej: ['produccion.vision_estrategica.posicionamiento']"
+                    "description": "Rutas completas de campos del formulario siempre en formato 'Sección.Subsección.campo', ej: ['produccion.vision_estrategica.posicionamiento']"
                 },
                 "use_loaded_image": {
                     "type": "boolean",

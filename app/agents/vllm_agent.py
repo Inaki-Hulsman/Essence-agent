@@ -1,7 +1,7 @@
 import json
 import asyncio
 import base64
-from app.form.functions import get_form
+from app.form.functions import get_form_text
 from app.services.tts_service import TTSService
 from app.agents.tools import TOOLS
 
@@ -11,6 +11,8 @@ from app.agents.schemas import EXECUTOR_PROMPT, ROUTER_PROMPT, SYSTEM_PROMPT, TO
 from app.config import GEMMA_CHAT_MODEL, VLLM_BASE_URL, DEFAULT_VOICE
 
 from openai import AsyncOpenAI
+
+from langfuse import observe
 
 
 async_vllm_client = AsyncOpenAI(
@@ -65,6 +67,7 @@ class VllmAgentRuntime:
 
         full_response = ""
 
+        @observe(name="llm-gen")
         async def llm_gen():
             """Generador que obtiene chunks del LLM."""
             nonlocal full_response
@@ -133,6 +136,7 @@ class VllmAgentRuntime:
 # 🧠 GENERACIÓN
 # -----------------------
 
+@observe(name="generate-text-stream", as_type="generation")
 async def generate_text_stream(messages: list) -> AsyncGenerator[str, None]:
     """Streaming normal de texto."""
     stream = await async_vllm_client.chat.completions.create(
@@ -146,7 +150,7 @@ async def generate_text_stream(messages: list) -> AsyncGenerator[str, None]:
         if delta:
             yield delta
 
-
+@observe(name="Route-decision",as_type="generation")
 async def route_decision(messages: list, tool_names: list[str]) -> Dict[str, Any]:
     """
     Paso 1: Decidir SI usar tool y CUÁL.
@@ -177,7 +181,7 @@ async def route_decision(messages: list, tool_names: list[str]) -> Dict[str, Any
     except Exception:
         return {"needs_tool": False, "tool_name": "none"}
 
-
+@observe(name="execute-tool-call",as_type="span")
 async def execute_tool_call(
     messages: list,
     tool_name: str,
@@ -225,15 +229,13 @@ def format_tool_result(tool_name: str, result: Any) -> str:
     """Formatea el resultado de una tool para el historial del modelo."""
     return f"[Resultado de {tool_name}]:\n{result}"
 
-def get_form_state():
-    form = get_form()
-    return json.dumps(form, ensure_ascii=False)
 
 
 # -----------------------
 # 🧠 PIPELINE PRINCIPAL
 # -----------------------
 
+@observe(name="stream_llm_response", as_type="span")
 async def stream_llm_response(
     conversation: List[Dict[str, Any]],
     tools: Dict[str, Any],
@@ -245,7 +247,7 @@ async def stream_llm_response(
     3. Loop: permite encadenar múltiples tool calls antes de responder
     """
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT + get_form_state()}] + conversation
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + get_form_text()}] + conversation
     tool_names = list(tools.keys())
 
     for iteration in range(MAX_TOOL_ITERATIONS):
@@ -317,7 +319,7 @@ async def stream_llm_response(
         })
         conversation.append({
             "role": "system",
-            "content": format_tool_result(tool_name, result)
+            "content": format_tool_result(tool_name, result) if tool_name != "get_form" else "Formulario actualizado correctamente recibido"
         })
 
         # 🔁 Continúa el loop → el modelo decide si necesita otra tool o responder

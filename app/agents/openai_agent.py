@@ -62,7 +62,7 @@ class OpenaiAgentRuntime:
     def on_function_call_started(self, call_id: str, name: str):
         """Llamado cuando OpenAI anuncia una nueva function call (output_item.added)."""
         self.pending_calls[call_id] = {"name": name, "arguments": ""}
-        # print(f"🛠  Tool iniciada: {name} [{call_id}]")
+        print(f"🛠  Tool iniciada: {name} [{call_id}]")
 
     def on_arguments_delta(self, call_id: str, delta: str):
         """Acumula el JSON de argumentos que llega en streaming."""

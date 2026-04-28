@@ -1,6 +1,6 @@
 from app.form.form_manager import FormManager
-from app.agents.llm import extract_section_info, call_llm
-import json
+from app.agents.llm import extract_info, call_llm
+import app
 
 
 dic = {
@@ -466,19 +466,6 @@ dic = {
   }
 }
 
-# custom_class = dict_to_class("Form", dic)
-
-# g = Form.model_validate(dic)
-
-# # print(g.to_dict())
-
-# array = ["produccion", "direccion"]
-
-# new_form = crear_custom_class(array, g)
-
-# instance = new_form
-
-# print(instance.model_dump())
 
 
 
@@ -511,24 +498,6 @@ data = {
 }
 
 # # Crear modelo dinámico Produccion
-# ProduccionModel = dict_to_custom_class("Form", dic)
-# produccion = ProduccionModel(**dic)
+form_manager = FormManager()
 
-# # Acceder a los campos
-# print(type(produccion.produccion.vision_estrategica))
-# print(type(produccion.produccion.vision_estrategica.posicionamiento))
-
-# form = FormManager()
-
-# reduced_form = form.get_very_reduced_form(["produccion.vision_estrategica.publico_objetivo"])
-# reduced_form_class = form.get_form_as_class(reduced_form)
-# extraction = extract_section_info(["el público objetivo son adolescentes reprimidos"], reduced_form, reduced_form_class).model_dump()
-# form.update_form(extraction)
-# form.save_form_to_json()
-# retur = json.dumps(extraction, ensure_ascii=False)
-
-# result = analyze_image()
-print("empiezo")
-resulta = call_llm({},["Hola que ase?"])
-# Serializar a diccionario
-print(resulta)
+print(form_manager.get_fields_path(dic))

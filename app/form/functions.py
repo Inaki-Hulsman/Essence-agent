@@ -1,5 +1,6 @@
 from app.config import IMAGES_FOLDER
 import os
+import json
 from fastapi import UploadFile, File
 from app.services.logger import logger
 from app.services.utils import encode_file
@@ -17,6 +18,10 @@ def get_form(new: bool = False):
         form = form_manager.get_form()
     
     return form
+
+def get_form_text():
+    form = get_form()
+    return json.dumps(form, ensure_ascii=False)
 
 async def get_images():
     images_refs = form_manager.get_all_image_references()

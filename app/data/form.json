@@ -9,52 +9,52 @@
     ],
     "vision_estrategica": {
       "publico_objetivo": {
-        "value": "mapaches bailarines",
+        "value": "adolescentes",
         "status": "agent",
         "description": "Define el tipo de audiencia al que se dirige la película (edad, intereses, mercado)."
       },
       "posicionamiento": {
-        "value": "top 5 mundial",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Indica cómo se ubicará el proyecto en el mercado (comercial, autoral, festivales, plataformas)."
       },
       "escala_produccion": {
-        "value": "alto presupuesto",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Nivel de ambición y recursos de la producción (bajo, medio, alto presupuesto)."
       }
     },
     "identidad_del_proyecto": {
       "definicion_conceptual": {
-        "value": "Hormigas atómicas voladoras que siembran el caos.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Resume el proyecto en una frase clara y concisa."
       },
       "propuesta_valor_diferencial": {
-        "value": "La hormiga se llama Manu",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Explica qué hace único al proyecto frente a otros similares."
       },
       "expectativa_mercado": {
-        "value": "La expectativa es que sea la mejor película de todos los tiempos, con una visión ambiciosa impulsada por la importancia del creador.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe el potencial comercial o de recepción del proyecto."
       }
     },
     "configuracion_del_equipo": {
       "perfil_director": {
-        "value": "Tipo Quentin Tarantino pero más guay",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define el tipo de director/a ideal para el proyecto."
       },
       "perfil_compositor": {
-        "value": "Tipo Hans Zimmer",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe el perfil musical o estilo del compositor/a deseado."
       },
       "colaboradores_clave": {
-        "value": "Shakira y Master Taiman",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Lista de colaboradores estratégicos importantes para el proyecto."
       }
     }
@@ -68,30 +68,30 @@
     ],
     "nota_de_direccion": {
       "vision_autoral": {
-        "value": "Perspectiva muy profunda de lo que son las hormigas, con el objetivo de transmitir calma.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Explica la mirada personal del director sobre la historia."
       },
       "referencias": {
-        "value": "Bichos de Disney, la experiencia real de las hormigas y documentales de National Geographic.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Incluye películas, obras o estilos que inspiran la dirección."
       },
       "tono_general": {
-        "value": "Alegre cuando están fuera del hormiguero, pero muy oscuro cuando están dentro del mismo.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define el tono emocional y narrativo (dramático, ligero, oscuro, etc.)."
       }
     },
     "ritmo_y_narrativa": {
       "velocidad_narrativa": {
-        "value": "Muy rápida, siguiendo el movimiento veloz de las hormigas.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe el ritmo general de la historia (lento, dinámico, variable)."
       },
       "uso_planos": {
-        "value": "Planos cortos llenos de acción.",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define si predominan planos largos o montaje fragmentado."
       },
       "estructura": {
@@ -102,21 +102,19 @@
     },
     "universo_visual": {
       "referencias_esteticas": {
-        "value": "Enormes miradas, con un estilo realista basado en la imagen proporcionada, que muestra un personaje de pulpo estilizado con ojos grandes, expresivos y brillantes, utilizando colores cálidos como naranja y rojo con detalles de textura suave.",
-        "status": "agent",
-        "description": "Referencias visuales que definen el estilo estético del proyecto.",
-        "references": []
+        "value": "",
+        "status": "empty",
+        "description": "Referencias visuales que definen el estilo estético del proyecto."
       },
       "mood": {
-        "value": "tipo insecto, de aracnídeos y similares",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Describe la atmósfera emocional general de la película."
       },
       "color": {
-        "value": "Una paleta de colores contrastantes que incluye tonos tierra y arena (beige, ocre), azul turquesa para el agua, blanco para la nieve, y toques intensos de naranja y rojo para el fuego o lava.",
-        "status": "agent",
-        "description": "Define la aproximación al uso del color (paleta, contraste, simbolismo).",
-        "references": []
+        "value": "",
+        "status": "empty",
+        "description": "Define la aproximación al uso del color (paleta, contraste, simbolismo)."
       }
     }
   },
@@ -129,8 +127,8 @@
     ],
     "estilo_global": {
       "sistema_formal": {
-        "value": "texturas asimétricas y formas desordenadas",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define las formas, texturas y coherencia visual del mundo."
       },
       "traduccion_vision_director": {

@@ -41,19 +41,19 @@ class FormManager:
         reduced_form = {section: form[section] for section in selected_sections if section in form}
         return self.get_clean_form(reduced_form)
     
-    def get_very_reduced_form(self, selected_sections: List[str]) -> dict:
+    def get_very_reduced_form(self, selected_fields: List[str]):
         form = self.get_form()
 
         reduced = {}
 
-        for section in selected_sections:
+        for section in selected_fields:
             keys = section.split(".")
             src = form
             dst = reduced
 
             for i, key in enumerate(keys):
                 if key not in src:
-                    break  # ruta inválida, la ignoramos
+                    return False, None  # ruta inválida, la ignoramos
 
                 # Si es el último nivel, copiamos el valor
                 if i == len(keys) - 1:
@@ -67,7 +67,7 @@ class FormManager:
                     dst = dst[key]
                     src = src[key]
 
-        return self.get_clean_form(reduced)
+        return True, self.get_clean_form(reduced) 
     
     def get_clean_form(self, form: dict) -> dict:
 
@@ -84,6 +84,23 @@ class FormManager:
             else:
                 cleaned[k] = v
         return cleaned
+    
+    def get_fields_path(self, form : dict):
+        
+        fields = []
+
+        for k, v in form.items():
+            if isinstance(v, dict):
+                # Si parece un Field
+                if set(v.keys()) >= set(FIELD_KEYS):
+                    # Keep only value, status, description
+                    fields.append(k)
+                else:
+                    # Recurse
+                    sons = self.get_fields_path(v)
+                    fields.extend([k + "." + s for s in sons])
+
+        return fields
 
 
     def load_form_from_json(self, json_path: str = "") -> dict:
