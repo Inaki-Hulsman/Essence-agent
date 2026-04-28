@@ -8,13 +8,15 @@ from app.config import OPENAI_API_KEY, OPENAI_WS_URL
 from fastapi.middleware.cors import CORSMiddleware
 
 # Servicios de STT y TTS (clientes de los microservicios)
-from app.realtime.openai_agent import OpenaiAgentRuntime
-from app.realtime.vllm_agent import VllmAgentRuntime
-from app.realtime.stt_service import STTService
-from app.realtime.tts_service import TTSService
+from app.agents.openai_agent import OpenaiAgentRuntime
+from app.agents.vllm_agent import VllmAgentRuntime
+from app.services.stt_service import STTService
+from app.services.tts_service import TTSService
 
-from app.services.schemas import INITIAL_INPUT
-from app.tools.tools import get_form, update_field, upload_image, delete_loaded_image
+from app.agents.schemas import INITIAL_INPUT
+from app.form.functions import get_form, get_images, update_field, upload_image, delete_loaded_image, remove_image_reference, upload_section_image
+
+from app.agents.llm import llm_models
 
 
 
@@ -41,23 +43,34 @@ _tts: TTSService | None = None
 
 @app.get("/get_form")
 async def get_form_endpoint(new: bool = False):
-    return get_form(new)
+    form = get_form(new)
+    images = await get_images()
+
+    return {
+        "form": form,
+        "images": images
+    }
 
 
 @app.patch("/update_field")
 async def update_field_endpoint(body: dict):
     return await update_field(body["path"], body["value"])
 
-
 @app.post("/upload_image")
 async def upload_image_endpoint(file: UploadFile = File(...)):
     return await upload_image(file)
     
-
 @app.post("/delete_loaded_image")
 async def delete_loaded_image_endpoint():
     return await delete_loaded_image()
 
+@app.post("/upload_section_image")
+async def upload_section_image_endpoint(file: UploadFile = File(...), field_path: str = ""):
+    return await upload_section_image(file, field_path)
+
+@app.delete("/remove_image_reference")
+async def remove_image_reference_endpoint(body: dict):
+    return await remove_image_reference(body["field_path"], body["image_name"])
 
 @app.on_event("startup")
 async def startup():
@@ -78,6 +91,7 @@ async def websocket_vllm_agent(client_ws: WebSocket):
 
     await client_ws.accept()
     print("🟢 Client connected")
+    llm_models.set_vllm_model()
 
     stt = STTService()
     stt.start()
@@ -197,6 +211,7 @@ async def websocket_vllm_agent(client_ws: WebSocket):
 async def websocket_openai_agent(client_ws: WebSocket):
     await client_ws.accept()
     print("🟢 Client connected")
+    llm_models.set_openai_model()
 
     try:
         async with websockets.connect(

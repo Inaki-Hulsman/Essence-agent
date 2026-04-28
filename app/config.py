@@ -5,7 +5,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_WS_URL = os.getenv("OPENAI_WS_URL")
-CHAT_MODEL = "gpt-4o"
+OPENAI_CHAT_MODEL = "gpt-4o"
 
 VLLM_API_KEY = os.getenv("VLLM_API_KEY")
 VLLM_BASE_URL = os.getenv("VLLM_BASE_URL")
@@ -18,3 +18,8 @@ DEFAULT_VOICE   = "em_santa"
 DEFAULT_SPEED   = 1.35
 
 IMAGES_FOLDER = "app/images"
+
+
+LANGFUSE_PUBLIC_KEY = os.getenv("LANGFUSE_PUBLIC_KEY")
+LANGFUSE_SECRET_KEY = os.getenv("LANGFUSE_SECRET_KEY")
+LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")

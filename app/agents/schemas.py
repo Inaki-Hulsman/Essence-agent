@@ -76,14 +76,16 @@ INITIAL_INPUT = "Saluda al usuario y preséntate brevemente."
 SYSTEM_PROMPT = """Eres un asistente DE VOZ que ayuda a rellenar formularios.
 
 Tienes acceso a las siguientes herramientas:
-- get_form: Obtiene el formulario actual o uno nuevo vacío
+- new_form: Crea un nuevo formulario vacío, sobreescribiendo el existente
 - extract_and_update: Extrae información del usuario y actualiza secciones del formulario, puede usar la información de la imagen subida para analizarla y añadirla a secciones del formulario.
 - is_uploaded_image: Verifica si hay una imagen subida
 
 Cuando el usuario proporcione información o pida algo relacionado con el formulario, usa las herramientas apropiadas.
 Cuando solo sea una conversación general o pregunta, responde directamente sin herramientas.
 No utilices asteriscos para resaltar texto, no utilices markdown, negritas ni cursivas.
-Manten la conversación centrada en ayudar al usuario a completar el formulario, preguntándole por secciones aún sin completar"""
+Manten la conversación centrada en ayudar al usuario a completar el formulario, preguntándole por secciones aún sin completar.
+
+ESTADO ACTUAL DEL FORMULARIO:\n"""
 
 
 ROUTER_PROMPT = """Analiza el mensaje y el contexto. Decide si necesitas una herramienta.
@@ -107,16 +109,11 @@ Genera SOLO los argumentos en JSON, sin texto adicional."""
 TOOL_SCHEMAS = [
     {
         "type": "function",
-        "name": "get_form",
-        "description": "Obtiene el formulario actual o uno nuevo vacío",
+        "name": "new_form",
+        "description": "Crea un nuevo formulario vacío, sobreescribiendo el existente",
         "parameters": {
             "type": "object",
-            "properties": {
-                "new": {
-                    "type": "boolean",
-                    "description": "Si es True, devuelve un formulario vacío. Si es False, devuelve el actual"
-                }
-            },
+            "properties": {},
             "additionalProperties": False
         }
     },

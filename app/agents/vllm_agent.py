@@ -1,14 +1,23 @@
 import json
-from typing import List, Dict, Any, AsyncGenerator
-from app.config import GEMMA_CHAT_MODEL
-from openai import AsyncOpenAI
-from app.services.schemas import EXECUTOR_PROMPT, ROUTER_PROMPT, SYSTEM_PROMPT, TOOL_SCHEMAS, build_router_schema, build_tool_schema
+import asyncio
+import base64
+from app.form.functions import get_form
+from app.services.tts_service import TTSService
+from app.agents.tools import TOOLS
 
-from langfuse import observe
-from pydantic import BaseModel
-from app.config import CHAT_MODEL
-from app.services.observability import openai_client, async_client, langfuse
-from app.services.utils import encode_file
+from typing import List, Dict, Any, AsyncGenerator
+
+from app.agents.schemas import EXECUTOR_PROMPT, ROUTER_PROMPT, SYSTEM_PROMPT, TOOL_SCHEMAS, build_router_schema, build_tool_schema
+from app.config import GEMMA_CHAT_MODEL, VLLM_BASE_URL, DEFAULT_VOICE
+
+from openai import AsyncOpenAI
+
+
+async_vllm_client = AsyncOpenAI(
+    base_url=VLLM_BASE_URL,
+    api_key="not-needed"
+)
+
 
 # ⚠️ vLLM debe estar levantado en modo OpenAI-compatible con:
 # python -m vllm.entrypoints.openai.api_server \
@@ -16,84 +25,108 @@ from app.services.utils import encode_file
 #   --enable-auto-tool-choice \
 #   --tool-call-parser pythonic   ← Gemma usa formato pythonic
 
-MODEL_NAME = GEMMA_CHAT_MODEL
-MAX_TOOL_ITERATIONS = 5  # Evita loops infinitos
+MAX_TOOL_ITERATIONS = 4  # Evita loops infinitos
 
 
-# -----------------------
-# 🧠 LLAMDAS BÁSICAS
-# -----------------------
-@observe(name="llm-call", as_type="span")
-def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
+class VllmAgentRuntime:
+    """
+    Runtime para manejar la conversación y síntesis de audio con VLLM.
+    Encapsula la lógica del pipeline LLM + TTS.
+    """
 
-    prompt = langfuse.get_prompt("Essence-main-chat")
+    def __init__(self, client_ws, tts_service : TTSService):
+        """
+        Args:
+            client_ws: WebSocket del cliente
+            tts_service: Servicio de TTS para síntesis de audio
+        """
+        self.client_ws = client_ws
+        self.tts_service = tts_service
+        self.conversation: list = []
+        self.cancel_event = asyncio.Event()
+        self.voice = DEFAULT_VOICE
 
-    compiled_prompt = prompt.compile(
-        form=state,
-        changes=changes,
-        chat=recent_messages
-    )
-   
-    response = openai_client.chat.completions.create(
-        model=CHAT_MODEL,
-        messages= compiled_prompt ,# type: ignore
-    )
+    def add_user_message(self, text: str):
+        """Añade un mensaje del usuario a la conversación."""
+        self.conversation.append({"role": "user", "content": text})
 
-    content = response.choices[0].message.content # type: ignore
+    def set_voice(self, voice : str):
+        print("voz:" + voice)
+        """Cambia la voz del agente"""
+        self.voice = voice
 
-    if content is None: return "I couldn't generate a response based on your query."
-    return content
+    async def generate_response(self):
+        """
+        Genera una respuesta LLM + síntesis de audio.
+        Retorna el texto completo de la respuesta.
+        """
+        if not self.conversation:
+            return ""
 
+        full_response = ""
 
-@observe(name="extract-section-info", as_type="span")
-def extract_section_info(user_message: list, new_form : dict, form_class: type, image = None, image_type = None) -> BaseModel:
+        async def llm_gen():
+            """Generador que obtiene chunks del LLM."""
+            nonlocal full_response
+            async for chunk in stream_llm_response(self.conversation, TOOLS):
+                # Parar si llega interrupción
+                if self.cancel_event.is_set():
+                    return
 
-    # print(f"Extracting info for section with message: {user_message} and form: {new_form}")
-    # Build prompt
-    prompt = langfuse.get_prompt("Extract_section_info")
+                full_response += chunk
 
-    compiled_prompt : list= prompt.compile(
-        form=new_form,
-        chat=user_message
-    ) # type: ignore
+                # Enviar delta de texto al cliente
+                await self.client_ws.send_text(json.dumps({
+                    "type": "response.text.delta",
+                    "text": chunk
+                }))
+                yield chunk
 
-    # print("Compiled prompt for extraction:", compiled_prompt)
+        # Síntesis de audio con check de cancelación en cada chunk
+        try:
+            async for pcm_chunk in self.tts_service.synthesize_stream(llm_gen(), voice= self.voice):
+                if self.cancel_event.is_set():
+                    break
 
-    print(f"Image provided: {image is not None}, image type: {image_type}")
+                # Enviar delta de audio al cliente
+                await self.client_ws.send_text(json.dumps({
+                    "type": "response.audio.delta",
+                    "data": base64.b64encode(pcm_chunk).decode()
+                }))
 
-    if image and image_type:
-        content_type = image_type
-        base64_image = encode_file(image)
+            if not self.cancel_event.is_set():
+                # Solo notificar "done" si no fue interrumpido
+                await self.client_ws.send_text(json.dumps({
+                    "type": "response.text.done",
+                    "text": full_response
+                }))
+                await self.client_ws.send_text(json.dumps({
+                    "type": "response.audio.done"
+                }))
 
-        compiled_prompt = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": compiled_prompt[0]["content"]},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:{content_type};base64,{base64_image}"
-                        },
-                    },
-                ],
-            }
-        ] + compiled_prompt
-       
-    response = openai_client.chat.completions.parse(
-        model=CHAT_MODEL,
-        messages=compiled_prompt, # type: ignore
-        response_format=form_class
-    )
+                # Añadir la respuesta a la conversación
+                self.conversation.append({"role": "assistant", "content": full_response})
+            else:
+                # Truncar el historial — no añadir respuesta incompleta
+                print("⚡ Respuesta interrumpida, descartando")
 
-    parsed = response.choices[0].message.parsed # type: ignore
+        except Exception as e:
+            print(f"❌ Error en generate_response: {e}")
+            return "Lo siento, ha habido un error procesando la solicitud. Disculpe las molestias."
 
-    if parsed is None:
-        # fallback defensivo
-        return form_class()
+        return full_response
 
-    return parsed
+    def interrupt(self):
+        """Señaliza la interrupción del pipeline actual."""
+        self.cancel_event.set()
 
+    def reset_interrupt(self):
+        """Reinicia la señal de interrupción para la siguiente respuesta."""
+        self.cancel_event.clear()
+
+    def clear_conversation(self):
+        """Limpia el historial de conversación."""
+        self.conversation = []
 
 
 # -----------------------
@@ -102,8 +135,8 @@ def extract_section_info(user_message: list, new_form : dict, form_class: type, 
 
 async def generate_text_stream(messages: list) -> AsyncGenerator[str, None]:
     """Streaming normal de texto."""
-    stream = await async_client.chat.completions.create(
-        model=MODEL_NAME,
+    stream = await async_vllm_client.chat.completions.create(
+        model=GEMMA_CHAT_MODEL,
         messages=messages,
         stream=True,
         temperature=0.3,
@@ -125,13 +158,15 @@ async def route_decision(messages: list, tool_names: list[str]) -> Dict[str, Any
         "content": ROUTER_PROMPT.format(tool_names=", ".join(tool_names))
     }]
 
-    response = await async_client.chat.completions.create(
-        model=MODEL_NAME,
+    response = await async_vllm_client.chat.completions.create(
+        model=GEMMA_CHAT_MODEL,
         messages=router_messages,
         temperature=0,
         max_tokens=100,  # La decisión es corta
         response_format=schema,  # type: ignore
     )
+    
+    print(response.usage)
 
     content = response.choices[0].message.content
     if not content:
@@ -168,8 +203,8 @@ async def execute_tool_call(
         )
     }]
 
-    response = await async_client.chat.completions.create(
-        model=MODEL_NAME,
+    response = await async_vllm_client.chat.completions.create(
+        model=GEMMA_CHAT_MODEL,
         messages=executor_messages,
         temperature=0,
         max_tokens=500,
@@ -190,6 +225,10 @@ def format_tool_result(tool_name: str, result: Any) -> str:
     """Formatea el resultado de una tool para el historial del modelo."""
     return f"[Resultado de {tool_name}]:\n{result}"
 
+def get_form_state():
+    form = get_form()
+    return json.dumps(form, ensure_ascii=False)
+
 
 # -----------------------
 # 🧠 PIPELINE PRINCIPAL
@@ -206,7 +245,7 @@ async def stream_llm_response(
     3. Loop: permite encadenar múltiples tool calls antes de responder
     """
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}] + conversation
+    messages = [{"role": "system", "content": SYSTEM_PROMPT + get_form_state()}] + conversation
     tool_names = list(tools.keys())
 
     for iteration in range(MAX_TOOL_ITERATIONS):
@@ -267,7 +306,7 @@ async def stream_llm_response(
         })
 
         messages.append({
-            "role": "user",
+            "role": "system",
             "content": format_tool_result(tool_name, result)
         })
 
@@ -277,7 +316,7 @@ async def stream_llm_response(
             "content": json.dumps({"tool": tool_name, "arguments": args}, ensure_ascii=False)
         })
         conversation.append({
-            "role": "user",
+            "role": "system",
             "content": format_tool_result(tool_name, result)
         })
 

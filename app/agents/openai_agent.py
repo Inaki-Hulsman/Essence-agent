@@ -1,5 +1,5 @@
-from app.services.schemas import TOOL_SCHEMAS
-from app.tools.tools import TOOLS
+from app.agents.schemas import TOOL_SCHEMAS
+from app.agents.tools import TOOLS
 import json
 from app.services.logger import logger
 
@@ -62,7 +62,7 @@ class OpenaiAgentRuntime:
     def on_function_call_started(self, call_id: str, name: str):
         """Llamado cuando OpenAI anuncia una nueva function call (output_item.added)."""
         self.pending_calls[call_id] = {"name": name, "arguments": ""}
-        print(f"🛠  Tool iniciada: {name} [{call_id}]")
+        # print(f"🛠  Tool iniciada: {name} [{call_id}]")
 
     def on_arguments_delta(self, call_id: str, delta: str):
         """Acumula el JSON de argumentos que llega en streaming."""
@@ -82,7 +82,7 @@ class OpenaiAgentRuntime:
         name = tool["name"]
         raw_args = tool["arguments"]
 
-        print(f"🛠  Ejecutando: {name}({raw_args})")
+        # print(f"🛠  Ejecutando: {name}({raw_args})")
 
         try:
             args = json.loads(raw_args) if raw_args else {}
@@ -90,7 +90,6 @@ class OpenaiAgentRuntime:
             args = {}
 
         result = await self.run_tool(name, args)
-        print(f"✅  Resultado: {result}")
 
         # 1️⃣  Añadir el resultado a la conversación
         await self.openai_ws.send(json.dumps({

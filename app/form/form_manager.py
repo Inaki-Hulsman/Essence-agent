@@ -233,7 +233,23 @@ class FormManager:
         self.current_image_type = ""
 
 
-
+    def update_field(self, path: str, value: str):
+        """
+        path = "seccion.grupo.campo"  ej: "produccion.vision_estrategica.posicionamiento"
+        """
+        keys = path.split(".")
+        form = self.get_form()
+        
+        node = form
+        for key in keys[:-1]:
+            node = node[key]
+        
+        node[keys[-1]]["value"] = value
+        node[keys[-1]]["status"] = "user"
+        
+        self.update_form(form)
+        self.save_form_to_json()
+        return
 
 
 
