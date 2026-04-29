@@ -136,7 +136,7 @@ TOOL_SCHEMAS = [
             "properties": {
                 "message": {
                     "type": "string",
-                    "description": "Mensaje del usuario con la información a extraer"
+                    "description": "Mensaje del usuario con la información a extraer. Pon siempre suficiente contexto para poder rellenar el campo con la información pertinente"
                 },
                 "selected_fields": {
                     "type": "array",

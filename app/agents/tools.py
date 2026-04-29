@@ -32,21 +32,28 @@ async def extract_and_update(message: str, selected_fields: List[str], use_loade
 
     fm = form_manager
 
-    reduced_form = None
-    for i in range(FIELD_PARSING_RETRIES):
-        result, reduced_form = fm.get_very_reduced_form(selected_fields)
-        if not result:
-            print(f"Campos inválidos: {selected_fields}, reintentando...")
-            selected_fields = correct_fields(selected_fields, fm.get_fields_path(fm.get_form()),message)
-
-    if reduced_form is None: 
-        print("No se han podido extraer campos válidos... usando todo el formulario")
+    if not selected_fields:
+        print("No se han definido campos del formulario, usando todo el formulario")
         reduced_form = fm.get_clean_form(fm.get_form())
+
+    else:
+        # Obtener el formulario compuesto únicamente por los campos especificados en los selected_fields
+        reduced_form = None
+        for i in range(FIELD_PARSING_RETRIES):
+            result, reduced_form = fm.get_very_reduced_form(selected_fields)
+            if not result: 
+                print(f"Campos inválidos: {selected_fields}, reintentando...")
+                selected_fields = correct_fields(selected_fields, fm.get_fields_path(fm.get_form()),message)
+
+        if reduced_form is None: 
+            print("No se han podido extraer campos válidos... usando todo el formulario")
+            reduced_form = fm.get_clean_form(fm.get_form())
 
 
     reduced_form_class = fm.get_form_as_class(reduced_form)
 
-    if use_loaded_image:
+    # Si hay imagen la pasamos como argumento
+    if use_loaded_image:                                        
         image_name = fm.get_current_image().get("name", "")
         image = load_image(f"{IMAGES_FOLDER}/{image_name}")
         extraction = extract_info([message],

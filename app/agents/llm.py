@@ -75,7 +75,7 @@ def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
     return content
 
 
-@observe(name="extract-section-info", as_type="generation")
+@observe(name="extract-info", as_type="generation")
 def extract_info(user_message: list, new_form : dict, form_class: type, image = None, image_type = None) -> BaseModel:
 
     # print(f"Extracting info for section with message: {user_message} and form: {new_form}")
@@ -87,7 +87,7 @@ def extract_info(user_message: list, new_form : dict, form_class: type, image = 
         chat=user_message
     ) # type: ignore
 
-    print("Compiled prompt for extraction:", compiled_prompt)
+    # print("Compiled prompt for extraction:", compiled_prompt)
 
     print(f"Image provided: {image is not None}, image type: {image_type}")
 
@@ -119,19 +119,21 @@ def extract_info(user_message: list, new_form : dict, form_class: type, image = 
             model=model.model_name,
             messages=compiled_prompt,
             response_format=form_class,
-            timeout=12
+            timeout=12,
+            
         )
         print(response.usage)
 
         parsed = response.choices[0].message.parsed # type: ignore
         if parsed is None:
             # fallback defensivo
+            print("Parseo vacío")
             return form_class()
 
         return parsed
     
     except Exception as e:
-        print(e)
+        print(f"Error en la llamada al LLM en extract_info: {e}")
         return form_class()
 
 

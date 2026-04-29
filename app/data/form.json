@@ -9,8 +9,8 @@
     ],
     "vision_estrategica": {
       "publico_objetivo": {
-        "value": "adolescentes",
-        "status": "agent",
+        "value": "",
+        "status": "empty",
         "description": "Define el tipo de audiencia al que se dirige la película (edad, intereses, mercado)."
       },
       "posicionamiento": {
@@ -43,9 +43,12 @@
     },
     "configuracion_del_equipo": {
       "perfil_director": {
-        "value": "",
-        "status": "empty",
-        "description": "Define el tipo de director/a ideal para el proyecto."
+        "value": "Un director con aspecto de personaje de caricatura tipo pirata o pulpo con sombrero tricornio.",
+        "status": "agent",
+        "description": "Define el tipo de director/a ideal para el proyecto.",
+        "references": [
+          "EmojiBlitzDavyJones1.webp"
+        ]
       },
       "perfil_compositor": {
         "value": "",

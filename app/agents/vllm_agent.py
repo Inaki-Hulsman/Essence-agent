@@ -264,10 +264,10 @@ async def stream_llm_response(
                 full_response += chunk
                 yield chunk
 
-            conversation.append({
-                "role": "assistant",
-                "content": full_response
-            })
+            # conversation.append({
+            #     "role": "assistant",
+            #     "content": full_response
+            # })
             return
 
         # ─── Paso 2: Generar argumentos ───────────────────────────────────────
