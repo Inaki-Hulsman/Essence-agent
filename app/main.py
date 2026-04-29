@@ -3,7 +3,7 @@ from fastapi.websockets import WebSocketState
 import websockets
 import json
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
-from app.config import OPENAI_API_KEY, OPENAI_WS_URL
+from app.config import OPENAI_API_KEY, OPENAI_WS_URL, DEFAULT_LANGUAGE
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -13,7 +13,7 @@ from app.agents.vllm_agent import VllmAgentRuntime
 from app.services.stt_service import STTService
 from app.services.tts_service import TTSService
 
-from app.agents.schemas import INITIAL_INPUT
+from app.agents.prompts import get_text_prompt
 from app.form.functions import get_form, get_form_text, get_images, update_field, upload_image, delete_loaded_image, remove_image_reference, upload_section_image
 
 from app.agents.llm import llm_models
@@ -98,7 +98,7 @@ async def websocket_vllm_agent(client_ws: WebSocket):
     text_queue: asyncio.Queue[str] = asyncio.Queue()
 
     # Input inicial
-    await text_queue.put(INITIAL_INPUT)
+    await text_queue.put(get_text_prompt(name = "initial_input",language = DEFAULT_LANGUAGE))
 
     # Instanciar el agent runtime
     agent = VllmAgentRuntime(client_ws, _tts) # type: ignore
@@ -202,6 +202,7 @@ async def websocket_vllm_agent(client_ws: WebSocket):
         except RuntimeError:
             pass
         
+        
 
 # -----------------------
 # 🌐 WEBSOCKET OPENAI ENDPOINT
@@ -232,7 +233,7 @@ async def websocket_openai_agent(client_ws: WebSocket):
                 "item": {
                     "type": "message",
                     "role": "user",
-                    "content": [{"type": "input_text", "text": f"Este es el estado actual del formulario: {get_form_text()}.\n" + INITIAL_INPUT}]
+                    "content": [{"type": "input_text", "text": f"Este es el estado actual del formulario: {get_form_text()}.\n" + get_text_prompt(name = "initial_input",language = DEFAULT_LANGUAGE)}]
                 }
             }))
             await openai_ws.send(json.dumps({"type": "response.create"}))

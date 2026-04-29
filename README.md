@@ -8,6 +8,4 @@ conda activate essence-agent
 
 
 uvicorn app.main:app --reload --host 0.0.0.0
-
-streamlit run streamlit_app.py
 ```

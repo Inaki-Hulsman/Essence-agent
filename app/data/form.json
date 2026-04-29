@@ -9,13 +9,13 @@
     ],
     "vision_estrategica": {
       "publico_objetivo": {
-        "value": "",
-        "status": "empty",
+        "value": "adolescentes",
+        "status": "agent",
         "description": "Define el tipo de audiencia al que se dirige la película (edad, intereses, mercado)."
       },
       "posicionamiento": {
-        "value": "",
-        "status": "empty",
+        "value": "top mundial",
+        "status": "agent",
         "description": "Indica cómo se ubicará el proyecto en el mercado (comercial, autoral, festivales, plataformas)."
       },
       "escala_produccion": {
@@ -43,12 +43,9 @@
     },
     "configuracion_del_equipo": {
       "perfil_director": {
-        "value": "Un director con aspecto de personaje de caricatura tipo pirata o pulpo con sombrero tricornio.",
+        "value": "bastante impresionante",
         "status": "agent",
-        "description": "Define el tipo de director/a ideal para el proyecto.",
-        "references": [
-          "EmojiBlitzDavyJones1.webp"
-        ]
+        "description": "Define el tipo de director/a ideal para el proyecto."
       },
       "perfil_compositor": {
         "value": "",
@@ -71,8 +68,8 @@
     ],
     "nota_de_direccion": {
       "vision_autoral": {
-        "value": "",
-        "status": "empty",
+        "value": "El perfil del director es bastante impresionante.",
+        "status": "agent",
         "description": "Explica la mirada personal del director sobre la historia."
       },
       "referencias": {

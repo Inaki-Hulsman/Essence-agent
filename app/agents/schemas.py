@@ -68,50 +68,18 @@ def build_tool_schema(tool_name: str, tools: Dict[str, Any]) -> Dict[str, Any]:
 
 
 # -----------------------
-# 📋 SYSTEM PROMPTS
-# -----------------------
-
-INITIAL_INPUT = "Saluda al usuario y preséntate brevemente."
-
-SYSTEM_PROMPT = """Eres un asistente DE VOZ que ayuda a rellenar formularios.
-
-Tienes acceso a las siguientes herramientas:
-- get_form: Obtiene el estado formulario actual.
-- new_form: Crea un nuevo formulario vacío, sobreescribiendo el existente
-- extract_and_update: Extrae información del usuario y actualiza los campos del formulario, puede usar la información de la imagen subida para analizarla y añadirla a los campos del formulario.
-- is_uploaded_image: Verifica si hay una imagen subida
-
-Cuando el usuario proporcione información o pida algo relacionado con el formulario, usa las herramientas apropiadas.
-Cuando solo sea una conversación general o pregunta, responde directamente sin herramientas.
-No utilices asteriscos para resaltar texto, no utilices markdown, negritas ni cursivas.
-Manten la conversación centrada en ayudar al usuario a completar el formulario, preguntándole por secciones aún sin completar.
-
-ESTADO ACTUAL DEL FORMULARIO:\n"""
-
-
-ROUTER_PROMPT = """Analiza el mensaje y el contexto. Decide si necesitas una herramienta.
-
-Herramientas disponibles: {tool_names}
-
-Responde con JSON indicando si necesitas tool y cuál. Si no necesitas ninguna, tool_name = "none"."""
-
-EXECUTOR_PROMPT = """Basándote en el mensaje del usuario y el historial, genera los argumentos exactos para llamar a: {tool_name}
-
-Descripción: {tool_description}
-Parámetros requeridos: {required_params}
-
-Genera SOLO los argumentos en JSON, sin texto adicional."""
-
-
-# -----------------------
 # 📚 TOOL DEFINITIONS
 # -----------------------
+
+def get_tools_and_descriptions():
+
+    return "\n".join([f"- {tool['name']}: {tool['description']}" for tool in TOOL_SCHEMAS])
 
 TOOL_SCHEMAS = [
     {
         "type": "function",
         "name": "get_form",
-        "description": "Obtiene el estado formulario actual.",
+        "description": "Retrieves the current form state",
         "parameters": {
             "type": "object",
             "properties": {},
@@ -120,7 +88,7 @@ TOOL_SCHEMAS = [
     },{
         "type": "function",
         "name": "new_form",
-        "description": "Crea un nuevo formulario vacío, sobreescribiendo el existente",
+        "description": "Creates a new empty form, overwriting the existing one",
         "parameters": {
             "type": "object",
             "properties": {},
@@ -130,22 +98,22 @@ TOOL_SCHEMAS = [
     {
         "type": "function",
         "name": "extract_and_update",
-        "description": "Extrae información del usuario y actualiza los campos del formulario, puede usar la información de la imagen subida para analizarla y añadirla a los campos del formulario.",
+        "description": "Extracts information from the user and updates the form fields; you can use information from the uploaded image to analyze it and add it to the form fields.",
         "parameters": {
             "type": "object",
             "properties": {
                 "message": {
                     "type": "string",
-                    "description": "Mensaje del usuario con la información a extraer. Pon siempre suficiente contexto para poder rellenar el campo con la información pertinente"
+                    "description": "User message containing the information to be extracted. Always provide enough context to fill in the field with the relevant information"
                 },
                 "selected_fields": {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Rutas completas de campos del formulario siempre en formato 'Sección.Subsección.campo', ej: ['produccion.vision_estrategica.posicionamiento']"
+                    "description": "Complete form field paths must always be in the format ‘Section.Subsection.field’, e.g.: ['produccion.vision_estrategica.posicionamiento']"
                 },
                 "use_loaded_image": {
                     "type": "boolean",
-                    "description": "el valor debe ser True si el usuario pide que se añada informacion de la imagen cargada, False si no se hace alusión a la imagen"
+                    "description": "The value should be True if the user requests that information about the uploaded image be added, and False if the image is not mentioned."
                 }
             },
             "required": ["message", "selected_sections", "use_loaded_image"],
@@ -155,7 +123,7 @@ TOOL_SCHEMAS = [
     {
         "type": "function",
         "name": "is_uploaded_image",
-        "description": "Verifica si hay una imagen subida por el usuario",
+        "description": "Checks if an image has been uploaded",
         "parameters": {
             "type": "object",
             "properties": {},

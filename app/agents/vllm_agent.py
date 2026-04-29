@@ -7,8 +7,10 @@ from app.agents.tools import TOOLS
 
 from typing import List, Dict, Any, AsyncGenerator
 
-from app.agents.schemas import EXECUTOR_PROMPT, ROUTER_PROMPT, SYSTEM_PROMPT, TOOL_SCHEMAS, build_router_schema, build_tool_schema
+from app.agents.schemas import TOOL_SCHEMAS, build_router_schema, build_tool_schema, get_tools_and_descriptions
+from app.agents.prompts import get_chat_prompt
 from app.config import GEMMA_CHAT_MODEL, VLLM_BASE_URL, DEFAULT_VOICE
+
 
 from openai import AsyncOpenAI
 
@@ -157,10 +159,11 @@ async def route_decision(messages: list, tool_names: list[str]) -> Dict[str, Any
     Schema pequeño y binario → mucho más fiable en Gemma.
     """
     schema = build_router_schema(tool_names)
-    router_messages = messages + [{
-        "role": "user",
-        "content": ROUTER_PROMPT.format(tool_names=", ".join(tool_names))
-    }]
+    router_message = get_chat_prompt(name="agent_router",
+                                       role="system",
+                                       tool_names=tool_names
+                                       )
+    router_messages = messages + router_message
 
     response = await async_vllm_client.chat.completions.create(
         model=GEMMA_CHAT_MODEL,
@@ -198,14 +201,13 @@ async def execute_tool_call(
     schema = build_tool_schema(tool_name, tools)
     required = tool_def["parameters"].get("required", [])
 
-    executor_messages = messages + [{
-        "role": "user",
-        "content": EXECUTOR_PROMPT.format(
-            tool_name=tool_name,
-            tool_description=tool_def["description"],
-            required_params=required if required else "ninguno"
-        )
-    }]
+    executor_message = get_chat_prompt(name="tool_executor",
+                                       role="system",
+                                       tool_name=tool_name,
+                                       tool_description=tool_def["description"],
+                                       required_params = required if required else "ninguno"
+                                       )
+    executor_messages = messages + executor_message
 
     response = await async_vllm_client.chat.completions.create(
         model=GEMMA_CHAT_MODEL,
@@ -247,7 +249,11 @@ async def stream_llm_response(
     3. Loop: permite encadenar múltiples tool calls antes de responder
     """
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT + get_form_text()}] + conversation
+    system_message = get_chat_prompt(name="system_info",
+                                    role= "system",
+                                    form=get_form_text(),
+                                    tools = get_tools_and_descriptions())
+    messages = system_message + conversation
     tool_names = list(tools.keys())
 
     for iteration in range(MAX_TOOL_ITERATIONS):
@@ -260,7 +266,9 @@ async def stream_llm_response(
             # ─── Respuesta final en texto ──────────────────────────────────────
             full_response = ""
 
-            async for chunk in generate_text_stream(messages):
+            no_tool_used_message = [{"role": "system", "content": "no use of tool detected. Respond with natural text"}]
+
+            async for chunk in generate_text_stream(messages + no_tool_used_message):
                 full_response += chunk
                 yield chunk
 

@@ -47,13 +47,14 @@ class FormManager:
         reduced = {}
 
         for section in selected_fields:
+
+            if section not in self.get_fields_path(form):
+                 return False, None
             keys = section.split(".")
             src = form
             dst = reduced
 
             for i, key in enumerate(keys):
-                if key not in src:
-                    return False, None  # ruta inválida, la ignoramos
 
                 # Si es el último nivel, copiamos el valor
                 if i == len(keys) - 1:
@@ -122,7 +123,7 @@ class FormManager:
         if not json_path:
             json_path = self.form_path
         with open(json_path, "w", encoding="utf-8") as f:
-            print("Guardando formulario en JSON")
+            # print("Guardando formulario en JSON")
             json.dump(self.form, f, indent=2, ensure_ascii=False)
 
     def get_form(self) -> dict:

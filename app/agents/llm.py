@@ -3,20 +3,22 @@ from typing import List
 
 from langfuse import observe
 from pydantic import BaseModel
-from app.services.observability import langfuse
+from app.agents.prompts import get_chat_prompt
 from app.services.utils import encode_file
 
 # from langfuse.openai import openai as langfuse_openai # type: ignore
-from app.config import OPENAI_API_KEY, VLLM_BASE_URL, GEMMA_CHAT_MODEL, OPENAI_CHAT_MODEL
+from app.config import OPENAI_API_KEY, VLLM_BASE_URL, GEMMA_CHAT_MODEL, OPENAI_CHAT_MODEL, RETRY_WITH_OTHER_MODEL, GEMMA_TIMEOUT, OPENAI_TIMEOUT
 from openai import OpenAI
 
 class LLM_model:
     client : OpenAI = OpenAI()
     model_name = ""
+    timeout : int
 
-    def __init__(self, url : str | None, api_key : str|None, model_name : str):
+    def __init__(self, url : str | None, api_key : str|None, model_name : str, timeout : int = 60):
         self.client = OpenAI(base_url=url,api_key=api_key)
         self.model_name = model_name
+        self.timeout = timeout
 
 
 class LLM_models:
@@ -25,8 +27,8 @@ class LLM_models:
     openai_model : LLM_model
 
     def __init__(self) -> None:
-        self.vllm_model = LLM_model(VLLM_BASE_URL, "not-needed", GEMMA_CHAT_MODEL)
-        self.openai_model = LLM_model(None, OPENAI_API_KEY, OPENAI_CHAT_MODEL)
+        self.vllm_model = LLM_model(VLLM_BASE_URL, "not-needed", GEMMA_CHAT_MODEL, GEMMA_TIMEOUT)
+        self.openai_model = LLM_model(None, OPENAI_API_KEY, OPENAI_CHAT_MODEL, OPENAI_TIMEOUT)
         self.current_model = self.openai_model
 
     def set_vllm_model(self):
@@ -49,43 +51,15 @@ llm_models = LLM_models()
 # -----------------------
 # 🧠 LLAMDAS BÁSICAS
 # -----------------------
-@observe(name="llm-call", as_type="generation")
-def call_llm(state: dict, recent_messages: list, changes: list = []) -> str:
 
-    prompt = langfuse.get_prompt("Essence-main-chat")
-
-    compiled_prompt = prompt.compile(
-        form=state,
-        changes=changes,
-        chat=recent_messages
-    )
-
-
-    model = llm_models.get_current_model()
-   
-    response = model.client.chat.completions.create(
-        model=model.model_name,
-        messages= compiled_prompt ,# type: ignore
-    )
-
-    content = response.choices[0].message.content # type: ignore
-
-
-    if content is None: return "I couldn't generate a response based on your query."
-    return content
 
 
 @observe(name="extract-info", as_type="generation")
 def extract_info(user_message: list, new_form : dict, form_class: type, image = None, image_type = None) -> BaseModel:
 
-    # print(f"Extracting info for section with message: {user_message} and form: {new_form}")
     # Build prompt
-    prompt = langfuse.get_prompt("Extract_section_info")
+    prompt : list = get_chat_prompt(name="Extract_section_info", role="system", form = new_form, chat = user_message)
 
-    compiled_prompt : list= prompt.compile(
-        form=new_form,
-        chat=user_message
-    ) # type: ignore
 
     # print("Compiled prompt for extraction:", compiled_prompt)
 
@@ -95,11 +69,11 @@ def extract_info(user_message: list, new_form : dict, form_class: type, image = 
         content_type = image_type
         base64_image = encode_file(image)
 
-        compiled_prompt = [
+        prompt = [
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": compiled_prompt[0]["content"]},
+                    {"type": "text", "text": prompt[0]["content"]},
                     {
                         "type": "image_url",
                         "image_url": {
@@ -108,33 +82,45 @@ def extract_info(user_message: list, new_form : dict, form_class: type, image = 
                     },
                 ],
             }
-        ] + compiled_prompt
+        ] + prompt
 
     model = llm_models.get_current_model()
-       
-    print(f"Using model: {model.model_name}")
 
-    try:
-        response = model.client.chat.completions.parse(
-            model=model.model_name,
-            messages=compiled_prompt,
-            response_format=form_class,
-            timeout=12,
-            
-        )
-        print(response.usage)
+    for i in range(2):
 
-        parsed = response.choices[0].message.parsed # type: ignore
-        if parsed is None:
-            # fallback defensivo
-            print("Parseo vacío")
-            return form_class()
+        print(f"Using model: {model.model_name}")
+        try:
+            response = model.client.chat.completions.parse(
+                model=model.model_name,
+                messages=prompt,
+                response_format=form_class,
+                timeout=model.timeout
+            )
+            print(response.usage)
 
-        return parsed
-    
-    except Exception as e:
-        print(f"Error en la llamada al LLM en extract_info: {e}")
-        return form_class()
+            parsed = response.choices[0].message.parsed # type: ignore
+
+            if parsed is None:
+                # fallback defensivo
+                print("Parseo vacío")
+                return form_class()
+
+            return parsed
+        
+        except Exception as e:
+
+            print(f"Error en la llamada al LLM en extract_info: {e}")
+
+            # Si falla volver a probar con el otro modelo
+            if RETRY_WITH_OTHER_MODEL:
+                if model.model_name == GEMMA_CHAT_MODEL:
+                    model = llm_models.openai_model
+                else:
+                    model = llm_models.vllm_model
+            else:
+                break
+
+    return form_class()
 
 
 
@@ -143,13 +129,11 @@ def correct_fields(actual_fields : list, posible_fields : list , message : str) 
 
 
     print("CORRECTING...")
-    prompt = langfuse.get_prompt("correct_fields")
-
-    compiled_prompt : list= prompt.compile(
-        actual_fields = actual_fields,
-        posible_fields=posible_fields,
-        message=message
-    ) # type: ignore
+    prompt : list =get_chat_prompt(name="correct_fields",
+                            role="system",
+                            actual_fields=actual_fields,
+                            posible_fields=posible_fields,
+                            message=message)
 
     model = llm_models.get_current_model()
 
@@ -159,9 +143,9 @@ def correct_fields(actual_fields : list, posible_fields : list , message : str) 
     try:
         response = model.client.chat.completions.parse(
             model=model.model_name,
-            messages=compiled_prompt,
+            messages=prompt,
             response_format=Output,
-            timeout=12
+            timeout=model.timeout
         )
         print(response.usage)
 

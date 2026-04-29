@@ -5,4 +5,4 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
-logger = logging.getLogger("ecommerce-agent")
+logger = logging.getLogger("essence-agent")
